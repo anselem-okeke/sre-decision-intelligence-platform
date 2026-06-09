@@ -1,41 +1,81 @@
-# Python
+# Python bytecode
 __pycache__/
 *.py[cod]
-*.pyo
-*.pyd
+*$py.class
+
+# Virtual environments
 .venv/
 venv/
 env/
+ENV/
+
+# Python build artifacts
+build/
+dist/
 *.egg-info/
+.eggs/
+*.egg
+
+# Test and coverage output
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# Ruff / mypy / type checking caches
+.ruff_cache/
+.mypy_cache/
+.pyre/
+.pytype/
 
 # Environment files
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
 
-# IDE
-.vscode/
-.idea/
+# Local runtime files
+*.log
+logs/
+tmp/
+temp/
 
-# OS
+# OS files
 .DS_Store
 Thumbs.db
 
-# Logs
-*.log
+# IDE/editor files
+.vscode/
+.idea/
+*.swp
+*.swo
 
-# Terraform, if added later
-.terraform/
-*.tfstate
-*.tfstate.*
-.terraform.lock.hcl
+# Docker local overrides
+docker-compose.override.yml
 
-# Kubernetes secrets
-*secret*.yaml
-*.kubeconfig
+# PostgreSQL local data
+postgres_data/
+pgdata/
 
 # Generated files
-dist/
-build/
-coverage/
-.pytest_cache/
+*.sqlite
+*.sqlite3
+*.db
+
+# Secrets and credentials
+*.pem
+*.key
+*.crt
+*.p12
+*.kubeconfig
+kubeconfig
+secrets/
+credentials/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Local reports
+reports/
+coverage.xml
