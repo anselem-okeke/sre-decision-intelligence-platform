@@ -1,0 +1,28 @@
+id: frontend-service-selector-mismatch
+name: Frontend Service Selector Mismatch
+scenario: frontend-availability-breach
+severity: warning
+
+conditions:
+  - signal: probe_success
+    operator: equals
+    value: 0
+
+  - signal: frontend_endpoints
+    operator: equals
+    value: none
+
+  - signal: frontend_pod_ready
+    operator: equals
+    value: true
+
+decision:
+  impact_summary: Bank of Anthos frontend endpoint unavailable
+  user_impact: Users cannot reliably access the banking frontend service path.
+  slo_affected: frontend-availability
+  likely_root_cause: Frontend Service selector did not match frontend pod labels
+  confidence: high
+  category: service-routing
+  safe_action: Restore the frontend Service selector so it matches frontend pod labels
+  safe_action_command: kubectl patch svc frontend -n fintech-workload --type='json' -p='[{"op":"remove","path":"/spec/selector/slo-test"}]'
+  risk: low
