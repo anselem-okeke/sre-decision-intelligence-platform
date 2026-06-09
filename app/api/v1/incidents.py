@@ -1,22 +1,24 @@
 from fastapi import APIRouter
 
+from app.schemas.decision import DecisionResponse
+
 router = APIRouter(prefix="/api/v1/incidents", tags=["incidents"])
 
 
-@router.get("/frontend-availability")
-def get_frontend_availability_incident() -> dict:
-    return {
-        "incident_id": "frontend-availability-breach",
-        "service": "frontend",
-        "namespace": "fintech-workload",
-        "severity": "warning",
-        "status": "detected",
-        "impact": {
+@router.get("/frontend-availability", response_model=DecisionResponse)
+def get_frontend_availability_incident() -> DecisionResponse:
+    return DecisionResponse(
+        incident_id="frontend-availability-breach",
+        service="frontend",
+        namespace="fintech-workload",
+        severity="warning",
+        status="detected",
+        impact={
             "summary": "Bank of Anthos frontend endpoint unavailable",
             "user_impact": "Users cannot reliably access the banking frontend service path.",
             "slo_affected": "frontend-availability",
         },
-        "signals": {
+        signals={
             "prometheus": [
                 {
                     "name": "probe_success",
@@ -55,7 +57,7 @@ def get_frontend_availability_incident() -> dict:
             ],
             "argocd": [],
         },
-        "evidence": [
+        evidence=[
             "probe_success dropped to 0",
             "avg_over_time(probe_success[5m]) dropped to 0.7",
             "BankOfAnthosFrontendAvailabilitySLOBreach entered pending state",
@@ -63,12 +65,12 @@ def get_frontend_availability_incident() -> dict:
             "frontend pod remained 1/1 Running",
             "probe_success recovered after Service selector was restored",
         ],
-        "likely_root_cause": {
+        likely_root_cause={
             "summary": "Frontend Service selector did not match frontend pod labels",
             "confidence": "high",
             "category": "service-routing",
         },
-        "safe_action": {
+        safe_action={
             "summary": "Restore the frontend Service selector so it matches frontend pod labels",
             "command": (
                 "kubectl patch svc frontend -n fintech-workload "
@@ -77,9 +79,9 @@ def get_frontend_availability_incident() -> dict:
             ),
             "risk": "low",
         },
-        "metadata": {
+        metadata={
             "decision_engine_version": "0.1.0",
             "scenario": "frontend-availability-breach",
             "environment": "lab",
         },
-    }
+    )
