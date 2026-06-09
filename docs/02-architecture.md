@@ -1,55 +1,187 @@
 # Architecture
 
-## High-Level Architecture
+![img](/img/decision-intelligence-arch.png)
+
+## High-level architecture
 
 ```text
-GitHub Repo
+API request
    ↓
-Argo CD
+Incident Service
    ↓
-Kubernetes Cluster
-   ├── Bank of Anthos
-   ├── Prometheus
-   ├── Fluent Bit
-   ├── OpenSearch
-   ├── Kubernetes API
-   ├── Grafana
-   └── Decision Intelligence API
-   ```
+Collectors
+   ↓
+Signal Classifier
+   ↓
+Correlator
+   ↓
+Decision Engine
+   ↓
+Safe Action Mapper
+   ↓
+PostgreSQL
+   ↓
+API response
+```
 
-   ## Data Flow
+## Signal flow
 
-   Bank of Anthos
-   ├── Metrics → Prometheus
-   └── Logs → Fluent Bit → OpenSearch
-
+```text
 Prometheus
-   └── SLO signals → Decision Intelligence API
+  - probe_success
+  - availability SLO
+  - ALERTS
+  - pod readiness
+  - restart counts
+  - deployment availability
 
 OpenSearch
-   └── Log evidence → Decision Intelligence API
+  - frontend logs
+  - severity
+  - message
+  - timestamp
+  - Kubernetes metadata
 
 Kubernetes API
-   └── Runtime state → Decision Intelligence API
+  - Service selector
+  - Endpoints
+  - Pod status
+  - Pod labels
+  - Deployment state
 
-Argo CD
-   └── Deployment/change context → Decision Intelligence API
+Argo CD later
+  - sync status
+  - health status
+  - revision
+  - recent deployment/change context
+```
 
-Decision Intelligence API
-   └── Incident summary → Grafana
+## First supported incident flow
 
-   ## Design Principle
+```text
+Frontend availability SLO breach
+        ↓
+Prometheus shows probe_success = 0
+        ↓
+Kubernetes shows frontend endpoints = <none>
+        ↓
+Kubernetes shows frontend pod = 1/1 Running
+        ↓
+OpenSearch shows no dominant frontend crash signal
+        ↓
+Decision Engine identifies Service selector mismatch
+        ↓
+API returns impact, evidence, root cause, and safe action
+```
 
-   > The architecture separates signal detection from investigation. Prometheus is used to detect symptoms. OpenSearch is used to investigate logs. Kubernetes API is used to understand runtime state. Argo CD is used to understand what changed. The Decision Intelligence API correlates all of these sources into one incident summary.
+## Main components
 
-   ## Core Incident Questions
+### API layer
 
-  ### The platform is designed to answer:
+The API layer exposes endpoints for:
 
-  | Question                       | Source                               |
-| ------------------------------ | ------------------------------------ |
-| Who is affected?               | SLO metrics                          |
-| What changed?                  | Argo CD, Kubernetes API              |
-| Where is it spreading?         | Metrics, logs, service relationships |
-| What is the likely root cause? | Logs, events, correlation rules      |
-| What action is safe now?       | Rule engine and runbooks             |
+- health checks
+- incidents
+- decisions
+- signals
+- SLOs
+
+Initial endpoint:
+
+```http
+GET /api/v1/incidents/frontend-availability
+```
+
+### Collectors
+
+Collectors retrieve raw signals from external systems.
+
+Initial collectors:
+
+```text
+Prometheus collector
+OpenSearch collector
+Kubernetes collector
+```
+
+Later collector:
+
+```text
+Argo CD collector
+```
+
+### Signal classifier
+
+The signal classifier converts raw data into normalized signal objects.
+
+Example:
+
+```text
+probe_success = 0
+```
+
+becomes:
+
+```text
+Signal type: availability_failure
+Source: Prometheus
+Severity: warning
+Meaning: frontend probe failed
+```
+
+### Correlator
+
+The correlator connects related signals.
+
+Example:
+
+```text
+probe_success = 0
+frontend endpoints = <none>
+frontend pod = Running
+```
+
+This correlation suggests:
+
+```text
+Service path failure, not pod crash
+```
+
+### Decision engine
+
+The decision engine evaluates rules and determines:
+
+- impact
+- likely root cause
+- confidence
+- safe action
+
+### PostgreSQL
+
+PostgreSQL stores:
+
+- incidents
+- signals
+- evidence snapshots
+- decisions
+- rule evaluations
+
+SQLite is not used in this project.
+
+## Repository architecture
+
+This repository owns application code only.
+
+It does not own Kubernetes deployment manifests or observability infrastructure.
+
+Deployment belongs to the GitOps repository.
+
+```text
+sre-decision-intelligence-gitops
+```
+
+Application logic belongs to this repository.
+
+```text
+sre-decision-intelligence-platform
+```

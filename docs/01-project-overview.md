@@ -1,89 +1,101 @@
-
----
-
-# 8. Create project overview document
-
-Put this in `docs/01-project-overview.md`:
-
-```markdown
 # Project Overview
-
-## Name
-
-SRE Decision Intelligence Platform
 
 ## Purpose
 
-This project demonstrates how an SRE platform can move beyond raw observability dashboards and produce actionable incident decisions.
+The SRE Decision Intelligence Platform is designed to convert observability data into actionable incident decisions.
 
-The system is designed around one principle:
+Modern Kubernetes platforms generate large amounts of telemetry:
 
-> Observability should help teams make better decisions during production incidents.
+- metrics
+- logs
+- alerts
+- events
+- deployment state
+- runtime state
 
-## Problem Statement
+However, during an incident, engineers still need to manually connect the dots.
 
-Many teams collect large volumes of telemetry but still struggle during outages.
+This project focuses on that missing layer.
 
-Common problems include:
+## Problem
 
-- Too many alerts
-- Too many dashboards
-- Weak incident context
-- Unclear root cause
-- No clear safe next action
-- High cognitive load during production pressure
+Traditional monitoring can detect symptoms:
 
-This project addresses that gap by correlating telemetry signals into decision-oriented incident summaries.
+```text
+probe_success = 0
+availability = 0.7
+alert = pending
+```
 
-## Core Concept
+But detection alone does not explain:
 
-The platform starts from a user-impact signal, usually an SLO breach.
+- why the incident happened
+- whether users are affected
+- whether the pod crashed
+- whether the service path is broken
+- whether there was a recent deployment
+- what action is safe
 
-It then collects supporting evidence from metrics, logs, Kubernetes runtime state, and GitOps deployment history.
+## Solution
 
-The final output should answer:
+The platform correlates signals from multiple sources and produces a decision-ready incident summary.
 
-- What changed?
-- Who is affected?
-- Where is the failure spreading?
-- What is the likely root cause?
-- What action is safe now?
+```text
+Prometheus     → SLO impact and metrics
+OpenSearch     → workload and platform logs
+Kubernetes API → services, endpoints, pods, labels
+Argo CD        → GitOps/change context later
+PostgreSQL     → stored incident decisions
+```
 
-## Workload
+## First scenario
 
-The project uses Bank of Anthos as the realistic fintech workload.
+The first validated scenario is a Bank of Anthos frontend availability breach.
 
-Bank of Anthos provides a useful business context because it includes user-facing and backend service flows similar to real financial systems.
+The frontend pod remained healthy:
 
-## Platform Components
+```text
+Frontend pod: 1/1 Running
+```
 
-| Component                     | Role                                 |
-| ----------------------------- | ------------------------------------ |
-| **Bank of Anthos**            | Production-style workload            |
-| **Prometheus**                | Metrics and SLO detection            |
-| **Fluent Bit**                | Log collection                       |
-| **OpenSearch**                | Log storage and search               |
-| **Kubernetes API**            | Runtime and workload context         |
-| **Argo CD**                   | GitOps and deployment-change context |
-| **Grafana**                   | Visualization                        |
-| **Decision Intelligence API** | Correlation and decision generation  |
+But the frontend Service had no endpoints:
 
+```text
+Frontend Service: endpoints <none>
+```
 
-## Outcome
+Prometheus detected the user-facing failure:
 
-The final platform should demonstrate:
+```text
+probe_success = 0
+availability = 0.7
+```
 
-- SLO-driven incident detection
-- OpenSearch-based log investigation
-- Kubernetes-aware runtime context
-- GitOps-aware change correlation
-- Decision-oriented incident summaries
-- Safe action recommendations
+The likely root cause was a Service selector mismatch.
 
+## Expected decision output
 
+The platform should produce output like:
 
+```json
+{
+  "impact": "Frontend endpoint unavailable",
+  "evidence": [
+    "probe_success dropped to 0",
+    "frontend Service endpoints became empty",
+    "frontend pod remained 1/1 Running"
+  ],
+  "likely_root_cause": "Frontend Service selector mismatch",
+  "safe_action": "Restore the frontend Service selector"
+}
+```
 
+## Design principle
 
+> The platform should not create more noise.
 
+> It should reduce incident ambiguity.
 
+> The goal is not another alert.
 
+> The goal is the explanation behind the alert.

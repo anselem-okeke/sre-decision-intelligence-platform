@@ -1,98 +1,97 @@
 # SRE Decision Intelligence Platform
+![imge](/img/sre-decision-intelligence-architecure.png)
 
-![img](./img/decision-intelligence-arch.png)
+The SRE Decision Intelligence Platform turns raw observability signals into actionable incident context.
 
-A GitOps-driven Kubernetes SRE platform that turns raw telemetry into actionable incident decisions.
+It does not replace Prometheus, OpenSearch, Kubernetes, Argo CD, or Grafana.
 
-## Problem
+It sits above them and answers the questions engineers need during incident response:
 
-Modern cloud-native systems generate massive amounts of telemetry:
-
-- Metrics
-- Logs
-- Kubernetes events
-- Traces
-- Deployment signals
-- Security events
-
-But during incidents, teams often still struggle to answer the most important operational questions:
-
-- What changed?
-- Who is affected?
-- Where is the failure spreading?
+- What is impacted?
+- What evidence supports the alert?
 - What is the likely root cause?
 - What action is safe now?
 
-This project focuses on moving from observability data collection to decision intelligence.
-
-## Goal
-
-Build a production-style SRE Decision Intelligence Platform for Kubernetes.
-
-The platform uses:
-
-- Bank of Anthos as the realistic workload
-- Prometheus for SLI/SLO metrics
-- Fluent Bit for log collection
-- OpenSearch for log search and investigation
-- Kubernetes API for runtime context
-- Argo CD for GitOps and deployment-change awareness
-- Grafana for dashboards and incident visibility
-- A custom Decision Intelligence API for signal correlation and safe action recommendations
-
-## High-Level Flow
+## Core idea
 
 ```text
 SLO breach
-   ↓
-Prometheus detects user-impact symptom
-   ↓
-Decision Intelligence API collects evidence
-   ↓
-OpenSearch provides log context
-   ↓
-Kubernetes API provides runtime state
-   ↓
-Argo CD provides deployment-change context
-   ↓
-Incident summary is generated
-   ↓
-Grafana displays impact, root cause, and safe action
+    ↓
+Collect evidence
+    ↓
+Correlate signals
+    ↓
+Explain likely root cause
+    ↓
+Recommend safe action
 ```
 
----
+## First validated scenario
 
-## Core Data Sources
-
-| Source             | Tool                    | Purpose                             |
-| ------------------ | ----------------------- | ----------------------------------- |
-| Metrics            | Prometheus              | SLO symptoms, latency, availability |
-| Logs               | Fluent Bit → OpenSearch | Error evidence and service behavior |
-| Runtime context    | Kubernetes API          | Pods, deployments, events, restarts |
-| Deployment context | Argo CD                 | GitOps sync status, changes, drift  |
-| Visualization      | Grafana                 | Dashboards and incident summaries   |
-
-
----
-
-## Target Outcome
-### The platform should help answer:
+The first validated incident scenario is:
 
 ```text
-Incident: Banking transaction degradation
-
-Impact:
-Users cannot reliably complete transactions.
-
-Evidence:
-Frontend 5xx errors increased.
-Transaction service latency increased.
-Backend service logs show database connection errors.
-A new deployment was synced recently by Argo CD.
-
-Likely Root Cause:
-Database connection exhaustion in the transaction backend.
-
-Safe Action:
-Check recent rollout, inspect connection pool configuration, and scale only if resource saturation is confirmed.
+Bank of Anthos frontend availability breach
 ```
+
+In the [GitOps repository](https://github.com/anselem-okeke/sre-decision-intelligence-gitops), this scenario was validated with real signals:
+
+```text
+Frontend pod: 1/1 Running
+Frontend Service endpoints: <none>
+Prometheus probe_success: 0
+SLO availability: 0.7
+Alert: BankOfAnthosFrontendAvailabilitySLOBreach pending
+```
+
+The incident was not caused by a pod crash.
+
+The likely root cause was a frontend Service selector mismatch.
+
+## Repository boundary
+
+This repository contains the application/platform code.
+
+```text
+sre-decision-intelligence-platform
+```
+
+The [GitOps repository](https://github.com/anselem-okeke/sre-decision-intelligence-gitops) contains Kubernetes deployment configuration, Argo CD applications, observability manifests, incident evidence, and workload configuration.
+
+```text
+sre-decision-intelligence-gitops
+```
+
+## Planned components
+
+- FastAPI API layer
+- Prometheus collector
+- OpenSearch collector
+- Kubernetes collector
+- Argo CD collector later
+- Signal classifier
+- Incident correlator
+- Decision engine
+- Safe action mapper
+- PostgreSQL persistence
+- Test suite
+
+## Technology stack
+
+| Layer | Tool |
+|---|---|
+| API | FastAPI |
+| Schemas | Pydantic |
+| HTTP clients | httpx |
+| Kubernetes client | kubernetes Python client |
+| Database | PostgreSQL |
+| ORM | SQLAlchemy |
+| Migrations | Alembic |
+| Testing | pytest |
+| Local runtime | Docker Compose |
+
+## Goal
+
+> No production logic is implemented yet.
+
+> The current goal is to define the architecture and contracts before writing the first API endpoint.
