@@ -1,7 +1,11 @@
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
+from sqlalchemy.orm import Session
+
+from app.db.repository import save_decision_response
+from app.db.session import get_db
 
 from app.collectors.frontend_availability import collect_frontend_availability_live_signals
 from app.engine.decision_engine import RuleEngine
@@ -78,3 +82,27 @@ def get_frontend_availability_live_signals() -> dict[str, Any]:
                 "reason": str(error),
             },
         ) from error
+
+@router.post("/frontend-availability/persist", response_model=DecisionResponse)
+def persist_frontend_availability_incident(
+    db: Session = Depends(get_db),
+) -> DecisionResponse:
+    """
+    Persist the validated sample-based frontend availability decision.
+
+    This endpoint is useful for validating PostgreSQL persistence without requiring
+    a live incident to be active.
+    """
+    signals = get_frontend_availability_sample_signals()
+    engine = RuleEngine(RULE_PATH)
+    decision = engine.evaluate(signals)
+
+    save_decision_response(
+        db=db,
+        decision_response=decision,
+        input_signals=signals,
+        rule_id="frontend-service-selector-mismatch",
+        rule_matched=True,
+    )
+
+    return decision
