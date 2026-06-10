@@ -1,8 +1,11 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from datetime import datetime, timezone
+from uuid import UUID
 
 from app.db.models import Decision, EvidenceItem, Incident, RuleEvaluation, Signal
 from app.schemas.decision import DecisionResponse
+
+from typing import Optional
 
 
 def save_decision_response(
@@ -150,3 +153,86 @@ def resolve_incident(
     db.refresh(incident)
 
     return incident
+
+def add_resolution_evidence(
+    db: Session,
+    incident: Incident,
+    recovery_signals: dict,
+) -> None:
+    db.add(
+        EvidenceItem(
+            incident_pk=incident.id,
+            source="live-collector",
+            category="resolution",
+            summary="Frontend service recovery confirmed from live signals",
+            payload={
+                "probe_success": recovery_signals.get("probe_success"),
+                "frontend_endpoints": recovery_signals.get("frontend_endpoints"),
+                "frontend_pod_ready": recovery_signals.get("frontend_pod_ready"),
+                "frontend_pod_status": recovery_signals.get("frontend_pod_status"),
+                "frontend_availability_5m": recovery_signals.get("frontend_availability_5m"),
+                "alert_state": recovery_signals.get("alert_state"),
+            },
+        )
+    )
+
+
+def resolve_incident_with_evidence(
+    db: Session,
+    incident: Incident,
+    recovery_signals: dict,
+) -> Incident:
+    incident.status = "resolved"
+    incident.resolved_at = datetime.now(timezone.utc)
+
+    add_resolution_evidence(
+        db=db,
+        incident=incident,
+        recovery_signals=recovery_signals,
+    )
+
+    db.add(incident)
+    db.commit()
+    db.refresh(incident)
+
+    return incident
+
+
+
+def list_incidents(
+    db: Session,
+    status: str | None = None,
+    limit: int = 20,
+) -> list[Incident]:
+    query = (
+        db.query(Incident)
+        .options(
+            selectinload(Incident.signals),
+            selectinload(Incident.evidence_items),
+            selectinload(Incident.decisions),
+            selectinload(Incident.rule_evaluations),
+        )
+        .order_by(Incident.created_at.desc())
+    )
+
+    if status is not None:
+        query = query.filter(Incident.status == status)
+
+    return query.limit(limit).all()
+
+
+def get_incident_by_id(
+    db: Session,
+    incident_db_id: UUID,
+) -> Incident | None:
+    return (
+        db.query(Incident)
+        .options(
+            selectinload(Incident.decisions),
+            selectinload(Incident.signals),
+            selectinload(Incident.evidence_items),
+            selectinload(Incident.rule_evaluations),
+        )
+        .filter(Incident.id == incident_db_id)
+        .first()
+    )
