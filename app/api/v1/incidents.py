@@ -83,15 +83,15 @@ def get_frontend_availability_live_signals() -> dict[str, Any]:
             },
         ) from error
 
-@router.post("/frontend-availability/persist", response_model=DecisionResponse)
-def persist_frontend_availability_incident(
+@router.post("/frontend-availability/sample/persist", response_model=DecisionResponse)
+def persist_frontend_availability_sample_incident(
     db: Session = Depends(get_db),
 ) -> DecisionResponse:
     """
     Persist the validated sample-based frontend availability decision.
 
-    This endpoint is useful for validating PostgreSQL persistence without requiring
-    a live incident to be active.
+    This endpoint is for development/demo validation only.
+    It does not represent the current live cluster state.
     """
     signals = get_frontend_availability_sample_signals()
     engine = RuleEngine(RULE_PATH)
@@ -106,3 +106,46 @@ def persist_frontend_availability_incident(
     )
 
     return decision
+
+@router.post("/frontend-availability/live/persist", response_model=DecisionResponse)
+def persist_frontend_availability_live_incident(
+    db: Session = Depends(get_db),
+) -> DecisionResponse:
+    """
+    Persist a live frontend availability incident only when the current live
+    signals match the rule engine.
+
+    If the cluster is healthy, no database record is created.
+    """
+    try:
+        signals = collect_frontend_availability_live_signals()
+        engine = RuleEngine(RULE_PATH)
+        decision = engine.evaluate(signals)
+
+        save_decision_response(
+            db=db,
+            decision_response=decision,
+            input_signals=signals,
+            rule_id="frontend-service-selector-mismatch",
+            rule_matched=True,
+        )
+
+        return decision
+
+    except ValueError as error:
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "message": "No matching live incident rule found. Nothing was persisted.",
+                "reason": str(error),
+            },
+        ) from error
+
+    except Exception as error:
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "message": "Unable to collect or persist live frontend availability signals.",
+                "reason": str(error),
+            },
+        ) from error

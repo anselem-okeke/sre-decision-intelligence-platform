@@ -6,12 +6,14 @@ from app.db.repository import save_decision_response
 from app.db.session import SessionLocal, engine
 from app.engine.decision_engine import RuleEngine
 from app.engine.sample_signals import get_frontend_availability_sample_signals
+from app.tests.db_cleanup import clean_decision_tables
 
 RULE_PATH = Path("app/rules/frontend_availability_breach.yaml")
 
 
 def test_save_decision_response_persists_incident_decision_and_evidence():
-    Base.metadata.create_all(bind=engine)
+    # Base.metadata.create_all(bind=engine)
+    clean_decision_tables()
 
     signals = get_frontend_availability_sample_signals()
     engine_instance = RuleEngine(RULE_PATH)
@@ -52,3 +54,4 @@ def test_save_decision_response_persists_incident_decision_and_evidence():
 
     finally:
         db.close()
+        clean_decision_tables()

@@ -1,13 +1,12 @@
-from app.db.base import Base
-from app.db.session import engine
-
-# Import models so SQLAlchemy registers them with Base.metadata.
-from app.db import models  # noqa: F401
+import subprocess
 
 
 def main() -> None:
-    Base.metadata.create_all(bind=engine)
-    print("Database tables created successfully.")
+    subprocess.run(
+        ["alembic", "upgrade", "head"],
+        check=True,
+    )
+    print("Database migrations applied successfully.")
 
 
 if __name__ == "__main__":

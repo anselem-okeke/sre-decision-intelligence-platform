@@ -1,4 +1,5 @@
 from fastapi.testclient import TestClient
+from app.tests.db_cleanup import clean_decision_tables
 
 from app.db.base import Base
 from app.db.models import Decision, Incident
@@ -9,9 +10,11 @@ client = TestClient(app)
 
 
 def test_persist_frontend_availability_incident_endpoint_stores_decision():
-    Base.metadata.create_all(bind=engine)
+    # Base.metadata.create_all(bind=engine)
+    clean_decision_tables()
 
-    response = client.post("/api/v1/incidents/frontend-availability/persist")
+    # response = client.post("/api/v1/incidents/frontend-availability/persist")
+    response = client.post("/api/v1/incidents/frontend-availability/sample/persist")
 
     assert response.status_code == 200
 
@@ -43,3 +46,4 @@ def test_persist_frontend_availability_incident_endpoint_stores_decision():
 
     finally:
         db.close()
+        clean_decision_tables()
