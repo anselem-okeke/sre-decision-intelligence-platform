@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from datetime import datetime, timezone
 
 from app.db.models import Decision, EvidenceItem, Incident, RuleEvaluation, Signal
 from app.schemas.decision import DecisionResponse
@@ -119,3 +120,33 @@ def _save_rule_evaluation(
             input_signals=input_signals,
         )
     )
+
+def get_latest_open_incident(
+    db: Session,
+    incident_id: str,
+    service: str,
+    namespace: str,
+) -> Incident | None:
+    return (
+        db.query(Incident)
+        .filter(Incident.incident_id == incident_id)
+        .filter(Incident.service == service)
+        .filter(Incident.namespace == namespace)
+        .filter(Incident.status != "resolved")
+        .order_by(Incident.created_at.desc())
+        .first()
+    )
+
+
+def resolve_incident(
+    db: Session,
+    incident: Incident,
+) -> Incident:
+    incident.status = "resolved"
+    incident.resolved_at = datetime.now(timezone.utc)
+
+    db.add(incident)
+    db.commit()
+    db.refresh(incident)
+
+    return incident

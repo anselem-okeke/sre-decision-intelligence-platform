@@ -4,7 +4,11 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 
-from app.db.repository import save_decision_response
+from app.db.repository import (
+    get_latest_open_incident,
+    resolve_incident,
+    save_decision_response,
+)
 from app.db.session import get_db
 
 from app.collectors.frontend_availability import collect_frontend_availability_live_signals
@@ -146,6 +150,73 @@ def persist_frontend_availability_live_incident(
             status_code=503,
             detail={
                 "message": "Unable to collect or persist live frontend availability signals.",
+                "reason": str(error),
+            },
+        ) from error
+
+@router.post("/frontend-availability/live/resolve")
+def resolve_frontend_availability_live_incident(
+    db: Session = Depends(get_db),
+) -> dict[str, str]:
+    """
+    Resolve the latest open frontend availability incident when live signals show
+    the service path has recovered.
+    """
+    try:
+        signals = collect_frontend_availability_live_signals()
+
+        probe_success = signals.get("probe_success")
+        frontend_endpoints = signals.get("frontend_endpoints")
+        frontend_pod_ready = signals.get("frontend_pod_ready")
+
+        service_recovered = (
+            probe_success == 1.0
+            and frontend_endpoints != "none"
+            and frontend_pod_ready is True
+        )
+
+        if not service_recovered:
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "message": "Frontend service has not recovered yet. Incident was not resolved.",
+                    "signals": signals,
+                },
+            )
+
+        incident = get_latest_open_incident(
+            db=db,
+            incident_id="frontend-availability-breach",
+            service="frontend",
+            namespace="fintech-workload",
+        )
+
+        if incident is None:
+            raise HTTPException(
+                status_code=404,
+                detail={
+                    "message": "No open frontend availability incident found to resolve.",
+                },
+            )
+
+        resolved_incident = resolve_incident(db=db, incident=incident)
+
+        return {
+            "status": "resolved",
+            "incident_id": resolved_incident.incident_id,
+            "service": resolved_incident.service,
+            "namespace": resolved_incident.namespace,
+            "resolved_at": str(resolved_incident.resolved_at),
+        }
+
+    except HTTPException:
+        raise
+
+    except Exception as error:
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "message": "Unable to evaluate or resolve live frontend availability incident.",
                 "reason": str(error),
             },
         ) from error
