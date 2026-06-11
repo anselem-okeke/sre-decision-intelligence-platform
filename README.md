@@ -1,7 +1,7 @@
 # SRE Decision Intelligence Platform
 ![imge](/img/sre-decision-intelligence-architecure.png)
 
-![img](/img/decision-intelligence-monitor.gif)
+![img](/img/decision-intelligence-monitor-small.gif)
 
 The SRE Decision Intelligence Platform turns raw observability signals into actionable incident context.
 
