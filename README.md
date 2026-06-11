@@ -1,6 +1,8 @@
 # SRE Decision Intelligence Platform
 ![imge](/img/sre-decision-intelligence-architecure.png)
 
+![img](/img/decision-intelligence-monitor.gif)
+
 The SRE Decision Intelligence Platform turns raw observability signals into actionable incident context.
 
 It does not replace Prometheus, OpenSearch, Kubernetes, Argo CD, or Grafana.
