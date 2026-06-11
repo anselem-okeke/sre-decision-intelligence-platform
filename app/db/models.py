@@ -50,6 +50,10 @@ class Incident(Base):
         back_populates="incident",
         cascade="all, delete-orphan",
     )
+    events: Mapped[list["IncidentEvent"]] = relationship(
+        back_populates="incident",
+        cascade="all, delete-orphan",
+    )
 
 
 class Signal(Base):
@@ -158,3 +162,32 @@ class RuleEvaluation(Base):
     )
 
     incident: Mapped["Incident"] = relationship(back_populates="rule_evaluations")
+
+class IncidentEvent(Base):
+    __tablename__ = "incident_events"
+
+    id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+
+    incident_pk: Mapped[UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("incidents.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    event_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    summary: Mapped[str] = mapped_column(Text, nullable=False)
+    source: Mapped[str] = mapped_column(String(100), nullable=False)
+
+    payload: Mapped[dict | list | str | int | float | bool | None] = mapped_column(
+        JSONB,
+        nullable=True,
+    )
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=datetime.utcnow,
+        nullable=False,
+    )
+
+    incident: Mapped["Incident"] = relationship(back_populates="events")

@@ -269,6 +269,39 @@ def get_resolved_incidents(
     )
 
     return [incident_to_summary(incident) for incident in incidents]
+    
+
+@router.get("/{incident_db_id}/timeline")
+def get_incident_timeline(
+    incident_db_id: UUID,
+    db: Session = Depends(get_db),
+) -> list[dict]:
+    incident = get_incident_by_id(
+        db=db,
+        incident_db_id=incident_db_id,
+    )
+
+    if incident is None:
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "message": "Incident not found.",
+                "incident_db_id": str(incident_db_id),
+            },
+        )
+
+    return [
+        {
+            "event_type": event.event_type,
+            "summary": event.summary,
+            "source": event.source,
+            "payload": event.payload,
+            "created_at": event.created_at.isoformat()
+            if event.created_at
+            else None,
+        }
+        for event in sorted(incident.events, key=lambda item: item.created_at)
+    ]
 
 
 @router.get("/{incident_db_id}")

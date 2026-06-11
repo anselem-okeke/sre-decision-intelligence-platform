@@ -1,9 +1,8 @@
 from pathlib import Path
 
-from app.db.base import Base
 from app.db.models import Decision, EvidenceItem, Incident, RuleEvaluation, Signal
 from app.db.repository import save_decision_response
-from app.db.session import SessionLocal, engine
+from app.db.session import SessionLocal
 from app.engine.decision_engine import RuleEngine
 from app.engine.sample_signals import get_frontend_availability_sample_signals
 from app.tests.db_cleanup import clean_decision_tables

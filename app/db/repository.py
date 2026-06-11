@@ -2,10 +2,9 @@ from sqlalchemy.orm import Session, selectinload
 from datetime import datetime, timezone
 from uuid import UUID
 
-from app.db.models import Decision, EvidenceItem, Incident, RuleEvaluation, Signal
+from app.db.models import Decision, EvidenceItem, Incident, RuleEvaluation, Signal, IncidentEvent
 from app.schemas.decision import DecisionResponse
 
-from typing import Optional
 
 
 def save_decision_response(
@@ -27,6 +26,58 @@ def save_decision_response(
     db.add(incident)
     db.flush()
 
+    add_incident_event(
+        db=db,
+        incident=incident,
+        event_type="incident_detected",
+        summary=f"Incident detected for service {decision_response.service}",
+        source="decision-engine",
+        payload={
+            "incident_id": decision_response.incident_id,
+            "service": decision_response.service,
+            "namespace": decision_response.namespace,
+            "severity": decision_response.severity,
+            "status": decision_response.status,
+        },
+    )
+
+    add_incident_event(
+        db=db,
+        incident=incident,
+        event_type="signals_collected",
+        summary="Signals collected and normalized for incident evaluation",
+        source="collectors",
+        payload=input_signals,
+    )
+
+    add_incident_event(
+        db=db,
+        incident=incident,
+        event_type="rule_matched" if rule_matched else "rule_not_matched",
+        summary=f"Rule evaluation completed for {rule_id}",
+        source="rule-engine",
+        payload={
+            "rule_id": rule_id,
+            "matched": rule_matched,
+            "confidence": decision_response.likely_root_cause.confidence,
+        },
+    )
+
+    add_incident_event(
+        db=db,
+        incident=incident,
+        event_type="decision_created",
+        summary="Incident decision created with root cause and safe action",
+        source="decision-engine",
+        payload={
+            "root_cause": decision_response.likely_root_cause.summary,
+            "category": decision_response.likely_root_cause.category,
+            "safe_action": decision_response.safe_action.summary,
+            "risk": decision_response.safe_action.risk,
+        },
+    )
+
+
     _save_signals(db, incident, decision_response)
     _save_evidence(db, incident, decision_response)
     _save_decision(db, incident, decision_response)
@@ -43,6 +94,27 @@ def save_decision_response(
     db.refresh(incident)
 
     return incident
+
+
+def add_incident_event(
+    *,
+    db: Session,
+    incident: Incident,
+    event_type: str,
+    summary: str,
+    source: str,
+    payload: dict | list | str | int | float | bool | None = None,
+) -> IncidentEvent:
+    event = IncidentEvent(
+        incident=incident,
+        event_type=event_type,
+        summary=summary,
+        source=source,
+        payload=payload,
+    )
+
+    db.add(event)
+    return event
 
 
 def _save_signals(
@@ -191,6 +263,29 @@ def resolve_incident_with_evidence(
         recovery_signals=recovery_signals,
     )
 
+    add_incident_event(
+        db=db,
+        incident=incident,
+        event_type="recovery_observed",
+        summary="Frontend service recovery observed from live signals",
+        source="live-collector",
+        payload=recovery_signals,
+    )
+
+    add_incident_event(
+        db=db,
+        incident=incident,
+        event_type="incident_resolved",
+        summary="Incident marked as resolved after recovery validation",
+        source="decision-api",
+        payload={
+            "incident_id": incident.incident_id,
+            "service": incident.service,
+            "namespace": incident.namespace,
+            "resolved_at": str(incident.resolved_at),
+        },
+    )
+
     db.add(incident)
     db.commit()
     db.refresh(incident)
@@ -211,6 +306,7 @@ def list_incidents(
             selectinload(Incident.evidence_items),
             selectinload(Incident.decisions),
             selectinload(Incident.rule_evaluations),
+            selectinload(Incident.events),
         )
         .order_by(Incident.created_at.desc())
     )
@@ -232,7 +328,10 @@ def get_incident_by_id(
             selectinload(Incident.signals),
             selectinload(Incident.evidence_items),
             selectinload(Incident.rule_evaluations),
+            selectinload(Incident.events),
         )
         .filter(Incident.id == incident_db_id)
         .first()
     )
+
+

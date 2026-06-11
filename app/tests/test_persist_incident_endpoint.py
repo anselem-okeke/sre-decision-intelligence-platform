@@ -1,9 +1,8 @@
 from fastapi.testclient import TestClient
 from app.tests.db_cleanup import clean_decision_tables
 
-from app.db.base import Base
 from app.db.models import Decision, Incident
-from app.db.session import SessionLocal, engine
+from app.db.session import SessionLocal
 from app.main import app
 
 client = TestClient(app)

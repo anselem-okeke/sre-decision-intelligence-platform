@@ -1,5 +1,5 @@
 # SRE Decision Intelligence Platform
-![imge](/img/sre-decision-intelligence-architecure.png)
+![imge](/img/sre-decision-intelligence-architecure2.png)
 
 ![img](/img/decision-intelligence-monitor-small.gif)
 

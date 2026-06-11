@@ -18,6 +18,18 @@ def incident_to_summary(incident: Incident) -> dict:
 def incident_to_detail(incident: Incident) -> dict:
     return {
         **incident_to_summary(incident),
+        "timeline": [
+            {
+                "event_type": event.event_type,
+                "summary": event.summary,
+                "source": event.source,
+                "payload": event.payload,
+                "created_at": event.created_at.isoformat()
+                if event.created_at
+                else None,
+            }
+            for event in sorted(incident.events, key=lambda item: item.created_at)
+        ],
         "signals": [
             {
                 "source": signal.source,
