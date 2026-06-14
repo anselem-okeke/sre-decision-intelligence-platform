@@ -9,6 +9,23 @@ from app.schemas.incident_history import (
     IncidentTimelineEventResponse,
 )
 
+from app.schemas.generic_incidents import (
+    GenericEvaluateRequest,
+    GenericEvaluateResponse,
+    GenericPersistRequest,
+    GenericPersistResponse,
+    GenericResolveRequest,
+    GenericResolveResponse,
+    RuleEvaluationResponse,
+)
+from app.services.generic_incident_service import (
+    evaluate_live_signals,
+    evaluate_signals,
+    persist_evaluated_incident,
+    persist_live_incident,
+    resolve_incident_by_id,
+)
+
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 
@@ -322,6 +339,86 @@ def get_resolved_incidents(
     )
 
     return [incident_to_summary(incident) for incident in incidents]
+
+@router.post("/evaluate", response_model=GenericEvaluateResponse)
+def evaluate_incident_from_signals(
+    request: GenericEvaluateRequest,
+) -> dict:
+    decision, evaluations = evaluate_signals(request.signals)
+
+    if decision is None:
+        return {
+            "matched": False,
+            "decision": None,
+            "evaluations": evaluations,
+            "message": "No matching rule found for provided signals.",
+        }
+
+    return {
+        "matched": True,
+        "decision": decision,
+        "evaluations": evaluations,
+        "message": "Matching rule found.",
+    }
+
+@router.post("/evaluate/live", response_model=GenericEvaluateResponse)
+def evaluate_live_incident() -> dict:
+    try:
+        decision, evaluations, _signals = evaluate_live_signals()
+
+        if decision is None:
+            return {
+                "matched": False,
+                "decision": None,
+                "evaluations": evaluations,
+                "message": "No matching rule found for current live signals.",
+            }
+
+        return {
+            "matched": True,
+            "decision": decision,
+            "evaluations": evaluations,
+            "message": "Matching rule found for current live signals.",
+        }
+
+    except Exception as error:
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "message": "Unable to evaluate live incident signals.",
+                "reason": str(error),
+            },
+        ) from error
+
+
+@router.post("/persist", response_model=GenericPersistResponse)
+def persist_incident_from_signals(
+    request: GenericPersistRequest,
+    db: Session = Depends(get_db),
+) -> dict:
+    result = persist_evaluated_incident(
+        db=db,
+        signals=request.signals,
+    )
+
+    return result
+
+
+@router.post("/live/persist", response_model=GenericPersistResponse)
+def persist_current_live_incident(
+    db: Session = Depends(get_db),
+) -> dict:
+    try:
+        return persist_live_incident(db=db)
+
+    except Exception as error:
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "message": "Unable to evaluate and persist live incident.",
+                "reason": str(error),
+            },
+        ) from error
     
 
 @router.get("/{incident_db_id}/timeline", response_model=list[IncidentTimelineEventResponse])
@@ -344,6 +441,30 @@ def get_incident_timeline(
         )
 
     return incident_timeline_to_response(incident)
+
+
+@router.post("/{incident_db_id}/resolve", response_model=GenericResolveResponse)
+def resolve_incident(
+    incident_db_id: UUID,
+    request: GenericResolveRequest,
+    db: Session = Depends(get_db),
+) -> dict:
+    result = resolve_incident_by_id(
+        db=db,
+        incident_db_id=incident_db_id,
+        recovery_signals=request.recovery_signals,
+    )
+
+    if result is None:
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "message": "Incident not found.",
+                "incident_db_id": str(incident_db_id),
+            },
+        )
+
+    return result
 
 
 @router.get("/{incident_db_id}", response_model=IncidentDetailResponse)
