@@ -1,0 +1,35 @@
+id: frontend-high-5xx-rate
+scenario_id: frontend-availability-breach
+name: Frontend High 5xx Rate
+description: Frontend user path is degraded because the frontend service is returning elevated 5xx errors.
+priority: 80
+severity: critical
+domain: workload
+
+conditions:
+  - signal: probe_success
+    operator: equals
+    value: 0
+
+  - signal: frontend_5xx_rate
+    operator: greater_than
+    value: 0.05
+
+  - signal: frontend_endpoints
+    operator: not_equals
+    value: none
+
+  - signal: frontend_pod_ready
+    operator: equals
+    value: true
+
+decision:
+  impact_summary: Bank of Anthos frontend is returning elevated 5xx errors
+  user_impact: Users can reach the frontend path, but requests are failing at the application layer.
+  slo_affected: frontend-availability
+  likely_root_cause: Frontend application is returning elevated server errors
+  confidence: medium
+  category: application-errors
+  safe_action: Inspect frontend application logs, recent deployments, and upstream dependency errors before restarting
+  safe_action_command: kubectl logs -n fintech-workload deploy/frontend --tail=100
+  risk: medium

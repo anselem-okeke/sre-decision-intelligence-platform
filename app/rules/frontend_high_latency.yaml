@@ -1,0 +1,31 @@
+id: frontend-high-latency
+scenario_id: frontend-latency-degradation
+name: Frontend High Latency
+description: Frontend user path is degraded because p95 latency is above the acceptable threshold.
+priority: 70
+severity: warning
+domain: workload
+
+conditions:
+  - signal: frontend_latency_p95_ms
+    operator: greater_than
+    value: 1000
+
+  - signal: frontend_endpoints
+    operator: not_equals
+    value: none
+
+  - signal: frontend_pod_ready
+    operator: equals
+    value: true
+
+decision:
+  impact_summary: Bank of Anthos frontend latency is elevated
+  user_impact: Users can access the frontend, but response time is degraded.
+  slo_affected: frontend-latency
+  likely_root_cause: Frontend request path is slow while Kubernetes routing appears healthy
+  confidence: medium
+  category: latency-degradation
+  safe_action: Inspect frontend latency metrics, upstream service latency, and recent rollout changes
+  safe_action_command: kubectl logs -n fintech-workload deploy/frontend --tail=100
+  risk: low

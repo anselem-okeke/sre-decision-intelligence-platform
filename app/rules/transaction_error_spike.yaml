@@ -1,0 +1,31 @@
+id: transaction-error-spike
+scenario_id: transaction-failure-breach
+name: Transaction Error Spike
+description: User transactions are failing even though the frontend service path is reachable.
+priority: 75
+severity: critical
+domain: workload
+
+conditions:
+  - signal: transaction_error_rate
+    operator: greater_than
+    value: 0.03
+
+  - signal: frontend_endpoints
+    operator: not_equals
+    value: none
+
+  - signal: frontend_pod_ready
+    operator: equals
+    value: true
+
+decision:
+  impact_summary: Bank of Anthos transaction errors are elevated
+  user_impact: Users may be able to access the frontend but cannot reliably complete banking transactions.
+  slo_affected: transaction-success-rate
+  likely_root_cause: Transaction path is failing at the application or dependency layer
+  confidence: medium
+  category: transaction-failure
+  safe_action: Inspect transaction service logs and dependency health before restarting workloads
+  safe_action_command: kubectl logs -n fintech-workload deploy/transactionhistory --tail=100
+  risk: medium

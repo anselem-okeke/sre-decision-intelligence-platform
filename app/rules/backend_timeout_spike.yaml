@@ -1,0 +1,31 @@
+id: backend-timeout-spike
+scenario_id: backend-dependency-degradation
+name: Backend Timeout Spike
+description: Frontend or transaction path is degraded because backend dependency timeouts are elevated.
+priority: 72
+severity: warning
+domain: workload
+
+conditions:
+  - signal: backend_timeout_count
+    operator: greater_than
+    value: 20
+
+  - signal: frontend_endpoints
+    operator: not_equals
+    value: none
+
+  - signal: frontend_pod_ready
+    operator: equals
+    value: true
+
+decision:
+  impact_summary: Backend dependency timeouts are elevated
+  user_impact: Users may experience failed or slow banking operations caused by backend dependency delays.
+  slo_affected: backend-dependency-health
+  likely_root_cause: Backend dependency timeout spike
+  confidence: medium
+  category: dependency-timeout
+  safe_action: Inspect backend service logs, service-to-service latency, and dependency availability
+  safe_action_command: kubectl get pods -n fintech-workload
+  risk: low

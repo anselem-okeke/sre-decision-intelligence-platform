@@ -1,4 +1,11 @@
-from app.scenarios.frontend_availability import FRONTEND_SERVICE_SELECTOR_MISMATCH
+from app.scenarios.frontend_availability import (
+    BACKEND_TIMEOUT_SPIKE,
+    FRONTEND_HIGH_5XX_RATE,
+    FRONTEND_HIGH_LATENCY,
+    FRONTEND_SERVICE_SELECTOR_MISMATCH,
+    LEDGER_DATABASE_ERROR_SPIKE,
+    TRANSACTION_ERROR_SPIKE,
+)
 from app.scenarios.models import ScenarioDefinition, ScenarioStatus
 
 
@@ -42,5 +49,10 @@ class ScenarioRegistry:
 scenario_registry = ScenarioRegistry(
     scenarios=[
         FRONTEND_SERVICE_SELECTOR_MISMATCH,
+        FRONTEND_HIGH_5XX_RATE,
+        FRONTEND_HIGH_LATENCY,
+        TRANSACTION_ERROR_SPIKE,
+        BACKEND_TIMEOUT_SPIKE,
+        LEDGER_DATABASE_ERROR_SPIKE,
     ]
 )

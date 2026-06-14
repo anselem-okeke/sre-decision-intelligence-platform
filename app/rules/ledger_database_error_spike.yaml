@@ -1,0 +1,31 @@
+id: ledger-database-error-spike
+scenario_id: ledger-database-degradation
+name: Ledger Database Error Spike
+description: Banking ledger operations are degraded because database-related errors are elevated.
+priority: 78
+severity: critical
+domain: workload
+
+conditions:
+  - signal: ledger_database_error_count
+    operator: greater_than
+    value: 10
+
+  - signal: frontend_endpoints
+    operator: not_equals
+    value: none
+
+  - signal: frontend_pod_ready
+    operator: equals
+    value: true
+
+decision:
+  impact_summary: Ledger/database errors are elevated
+  user_impact: Users may experience failed balance, ledger, or transaction operations.
+  slo_affected: ledger-operation-success
+  likely_root_cause: Ledger or database error spike
+  confidence: medium
+  category: database-errors
+  safe_action: Inspect ledger service logs, database connectivity, and recent schema/config changes
+  safe_action_command: kubectl logs -n fintech-workload deploy/ledgerwriter --tail=100
+  risk: medium
