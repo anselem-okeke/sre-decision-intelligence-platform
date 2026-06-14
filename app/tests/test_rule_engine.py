@@ -5,7 +5,7 @@ import pytest
 from app.engine.decision_engine import RuleEngine
 from app.engine.sample_signals import get_frontend_availability_sample_signals
 
-RULE_PATH = Path("app/rules/frontend_availability_breach.yaml")
+RULE_PATH = Path("app/rules/frontend_service_selector_mismatch.yaml")
 
 
 def test_rule_engine_detects_frontend_service_selector_mismatch():

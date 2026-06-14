@@ -1,7 +1,10 @@
 id: frontend-service-selector-mismatch
+scenario_id: frontend-availability-breach
 name: Frontend Service Selector Mismatch
-scenario: frontend-availability-breach
+description: Frontend user path is unavailable because the Kubernetes Service has no backend endpoints while the pod is ready.
+priority: 100
 severity: warning
+domain: correlation
 
 conditions:
   - signal: probe_success

@@ -1,0 +1,31 @@
+id: frontend-pod-crashloop
+scenario_id: frontend-availability-breach
+name: Frontend Pod CrashLoopBackOff
+description: Frontend user path is unavailable because the frontend pod is repeatedly crashing.
+priority: 90
+severity: critical
+domain: platform
+
+conditions:
+  - signal: probe_success
+    operator: equals
+    value: 0
+
+  - signal: frontend_pod_ready
+    operator: equals
+    value: false
+
+  - signal: frontend_pod_status
+    operator: contains
+    value: CrashLoopBackOff
+
+decision:
+  impact_summary: Bank of Anthos frontend pod is crashing
+  user_impact: Users cannot reliably access the banking frontend service because the frontend workload is unhealthy.
+  slo_affected: frontend-availability
+  likely_root_cause: Frontend pod is in CrashLoopBackOff
+  confidence: high
+  category: workload-crash
+  safe_action: Inspect frontend pod logs and recent rollout before restarting or rolling back the deployment
+  safe_action_command: kubectl logs -n fintech-workload deploy/frontend --previous
+  risk: medium

@@ -7,7 +7,7 @@ from app.engine.decision_engine import RuleEngine
 from app.engine.sample_signals import get_frontend_availability_sample_signals
 from app.tests.db_cleanup import clean_decision_tables
 
-RULE_PATH = Path("app/rules/frontend_availability_breach.yaml")
+RULE_PATH = Path("app/rules/frontend_service_selector_mismatch.yaml")
 
 
 def test_save_decision_response_persists_incident_decision_and_evidence():

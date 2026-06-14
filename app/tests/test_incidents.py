@@ -21,6 +21,6 @@ def test_frontend_availability_incident_returns_decision_context():
     assert body["likely_root_cause"]["confidence"] == "high"
     assert body["safe_action"]["risk"] == "low"
 
-    assert "probe_success dropped to 0" in body["evidence"]
-    assert "frontend Service endpoints became empty" in body["evidence"]
-    assert "frontend pod remained 1/1 Running" in body["evidence"]
+    assert "Rule matched: Frontend Service Selector Mismatch" in body["evidence"]
+    assert "Scenario evaluated: frontend-availability-breach" in body["evidence"]
+    assert "Root cause category: service-routing" in body["evidence"]

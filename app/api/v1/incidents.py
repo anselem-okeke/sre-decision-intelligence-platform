@@ -23,7 +23,7 @@ from app.db.session import get_db
 
 from app.collectors.frontend_availability import collect_frontend_availability_live_signals
 from app.signals.frontend_availability import normalize_frontend_availability_signals
-from app.engine.decision_engine import RuleEngine
+from app.engine.decision_engine import RuleEngine, MultiRuleEngine
 from app.engine.sample_signals import get_frontend_availability_sample_signals
 from app.schemas.decision import DecisionResponse
 from app.api.v1.incident_presenters import (
@@ -34,7 +34,8 @@ from app.api.v1.incident_presenters import (
 
 router = APIRouter(prefix="/api/v1/incidents", tags=["incidents"])
 
-RULE_PATH = Path("app/rules/frontend_availability_breach.yaml")
+RULE_PATH = Path("app/rules/frontend_service_selector_mismatch.yaml")
+RULES_DIR = Path("app/rules")
 
 
 @router.get("/frontend-availability", response_model=DecisionResponse)
@@ -119,6 +120,23 @@ def get_frontend_availability_live_normalized_signals() -> list[dict]:
             status_code=503,
             detail={
                 "message": "Unable to collect or normalize live frontend availability signals.",
+                "reason": str(error),
+            },
+        ) from error
+
+@router.get("/frontend-availability/live/evaluations")
+def get_frontend_availability_live_rule_evaluations() -> list[dict]:
+    try:
+        signals = collect_frontend_availability_live_signals()
+        engine = MultiRuleEngine(RULES_DIR)
+
+        return engine.evaluate_all(signals)
+
+    except Exception as error:
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "message": "Unable to evaluate frontend availability rules.",
                 "reason": str(error),
             },
         ) from error

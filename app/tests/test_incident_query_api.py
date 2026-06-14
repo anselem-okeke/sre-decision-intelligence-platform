@@ -1,4 +1,5 @@
 from fastapi.testclient import TestClient
+from pathlib import Path
 
 from app.db.repository import save_decision_response
 from app.db.session import SessionLocal
@@ -9,7 +10,7 @@ from app.tests.db_cleanup import clean_decision_tables
 
 client = TestClient(app)
 
-RULE_PATH = "app/rules/frontend_availability_breach.yaml"
+RULE_PATH = Path("app/rules/frontend_service_selector_mismatch.yaml")
 
 
 def test_get_incident_history_returns_persisted_incident():
