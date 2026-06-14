@@ -22,6 +22,7 @@ from app.db.repository import (
 from app.db.session import get_db
 
 from app.collectors.frontend_availability import collect_frontend_availability_live_signals
+from app.signals.frontend_availability import normalize_frontend_availability_signals
 from app.engine.decision_engine import RuleEngine
 from app.engine.sample_signals import get_frontend_availability_sample_signals
 from app.schemas.decision import DecisionResponse
@@ -98,6 +99,26 @@ def get_frontend_availability_live_signals() -> dict[str, Any]:
             status_code=503,
             detail={
                 "message": "Unable to collect live frontend availability signals.",
+                "reason": str(error),
+            },
+        ) from error
+
+@router.get("/frontend-availability/live/signals/normalized")
+def get_frontend_availability_live_normalized_signals() -> list[dict]:
+    try:
+        raw_signals = collect_frontend_availability_live_signals()
+        normalized_signals = normalize_frontend_availability_signals(raw_signals)
+
+        return [
+            signal.model_dump(mode="json")
+            for signal in normalized_signals
+        ]
+
+    except Exception as error:
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "message": "Unable to collect or normalize live frontend availability signals.",
                 "reason": str(error),
             },
         ) from error
