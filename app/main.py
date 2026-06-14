@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from app.api.db_health import router as db_health_router
 from app.api.health import router as health_router
 from app.api.v1.incidents import router as incidents_router
+from app.api.v1.scenarios import router as scenarios_router
 from app.config import settings
 
 
@@ -19,7 +20,7 @@ def create_app() -> FastAPI:
     app.include_router(health_router)
     app.include_router(db_health_router)
     app.include_router(incidents_router)
-
+    app.include_router(scenarios_router)
     return app
 
 
