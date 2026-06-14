@@ -3,25 +3,15 @@ from app.db.models import Incident
 
 def incident_to_summary(incident: Incident) -> dict:
     return {
-        "id": incident.id,
+        "id": str(incident.id),
         "incident_id": incident.incident_id,
         "service": incident.service,
         "namespace": incident.namespace,
         "severity": incident.severity,
         "status": incident.status,
         "scenario": incident.scenario,
-        "created_at": incident.created_at,
-        "resolved_at": incident.resolved_at,
-    }
-
-
-def incident_to_timeline_event(event) -> dict:
-    return {
-        "event_type": event.event_type,
-        "summary": event.summary,
-        "source": event.source,
-        "payload": event.payload,
-        "created_at": event.created_at,
+        "created_at": incident.created_at.isoformat() if incident.created_at else None,
+        "resolved_at": incident.resolved_at.isoformat() if incident.resolved_at else None,
     }
 
 
@@ -29,7 +19,15 @@ def incident_to_detail(incident: Incident) -> dict:
     return {
         **incident_to_summary(incident),
         "timeline": [
-            incident_to_timeline_event(event)
+            {
+                "event_type": event.event_type,
+                "summary": event.summary,
+                "source": event.source,
+                "payload": event.payload,
+                "created_at": event.created_at.isoformat()
+                if event.created_at
+                else None,
+            }
             for event in sorted(incident.events, key=lambda item: item.created_at)
         ],
         "signals": [
@@ -38,7 +36,9 @@ def incident_to_detail(incident: Incident) -> dict:
                 "name": signal.name,
                 "value": signal.value,
                 "meaning": signal.meaning,
-                "collected_at": signal.collected_at,
+                "collected_at": signal.collected_at.isoformat()
+                if signal.collected_at
+                else None,
             }
             for signal in incident.signals
         ],
@@ -48,7 +48,9 @@ def incident_to_detail(incident: Incident) -> dict:
                 "category": evidence.category,
                 "summary": evidence.summary,
                 "payload": evidence.payload,
-                "created_at": evidence.created_at,
+                "created_at": evidence.created_at.isoformat()
+                if evidence.created_at
+                else None,
             }
             for evidence in incident.evidence_items
         ],
@@ -61,7 +63,9 @@ def incident_to_detail(incident: Incident) -> dict:
                 "confidence": decision.confidence,
                 "safe_action_summary": decision.safe_action_summary,
                 "safe_action_command": decision.safe_action_command,
-                "created_at": decision.created_at,
+                "created_at": decision.created_at.isoformat()
+                if decision.created_at
+                else None,
             }
             for decision in incident.decisions
         ],
@@ -71,15 +75,10 @@ def incident_to_detail(incident: Incident) -> dict:
                 "matched": rule.matched,
                 "confidence": rule.confidence,
                 "reason": rule.reason,
-                "created_at": rule.created_at,
+                "created_at": rule.created_at.isoformat()
+                if rule.created_at
+                else None,
             }
             for rule in incident.rule_evaluations
         ],
     }
-
-
-def incident_timeline_to_response(incident: Incident) -> list[dict]:
-    return [
-        incident_to_timeline_event(event)
-        for event in sorted(incident.events, key=lambda item: item.created_at)
-    ]

@@ -2,6 +2,13 @@ from pathlib import Path
 from typing import Any
 from uuid import UUID
 
+from app.schemas.incident_history import (
+    IncidentDetailResponse,
+    IncidentResolveResponse,
+    IncidentSummaryResponse,
+    IncidentTimelineEventResponse,
+)
+
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 
@@ -18,7 +25,11 @@ from app.collectors.frontend_availability import collect_frontend_availability_l
 from app.engine.decision_engine import RuleEngine
 from app.engine.sample_signals import get_frontend_availability_sample_signals
 from app.schemas.decision import DecisionResponse
-from app.api.v1.incident_presenters import incident_to_detail, incident_to_summary
+from app.api.v1.incident_presenters import (
+    incident_timeline_to_response,
+    incident_to_detail,
+    incident_to_summary,
+)
 
 router = APIRouter(prefix="/api/v1/incidents", tags=["incidents"])
 
@@ -158,7 +169,10 @@ def persist_frontend_availability_live_incident(
             },
         ) from error
 
-@router.post("/frontend-availability/live/resolve")
+@router.post(
+    "/frontend-availability/live/resolve",
+     response_model=IncidentResolveResponse
+)
 def resolve_frontend_availability_live_incident(
     db: Session = Depends(get_db),
 ) -> dict[str, str]:
@@ -214,7 +228,7 @@ def resolve_frontend_availability_live_incident(
             "incident_id": resolved_incident.incident_id,
             "service": resolved_incident.service,
             "namespace": resolved_incident.namespace,
-            "resolved_at": str(resolved_incident.resolved_at),
+            "resolved_at": resolved_incident.resolved_at,
         }
 
     except HTTPException:
@@ -230,7 +244,7 @@ def resolve_frontend_availability_live_incident(
         ) from error
 
 
-@router.get("/history")
+@router.get("/history", response_model=list[IncidentSummaryResponse])
 def get_incident_history(
     limit: int = 20,
     db: Session = Depends(get_db),
@@ -243,7 +257,7 @@ def get_incident_history(
     return [incident_to_summary(incident) for incident in incidents]
 
 
-@router.get("/open")
+@router.get("/open", response_model=list[IncidentSummaryResponse])
 def get_open_incidents(
     limit: int = 20,
     db: Session = Depends(get_db),
@@ -257,7 +271,7 @@ def get_open_incidents(
     return [incident_to_summary(incident) for incident in incidents]
 
 
-@router.get("/resolved")
+@router.get("/resolved", response_model=list[IncidentSummaryResponse])
 def get_resolved_incidents(
     limit: int = 20,
     db: Session = Depends(get_db),
@@ -271,7 +285,7 @@ def get_resolved_incidents(
     return [incident_to_summary(incident) for incident in incidents]
     
 
-@router.get("/{incident_db_id}/timeline")
+@router.get("/{incident_db_id}/timeline", response_model=list[IncidentTimelineEventResponse])
 def get_incident_timeline(
     incident_db_id: UUID,
     db: Session = Depends(get_db),
@@ -290,21 +304,10 @@ def get_incident_timeline(
             },
         )
 
-    return [
-        {
-            "event_type": event.event_type,
-            "summary": event.summary,
-            "source": event.source,
-            "payload": event.payload,
-            "created_at": event.created_at.isoformat()
-            if event.created_at
-            else None,
-        }
-        for event in sorted(incident.events, key=lambda item: item.created_at)
-    ]
+    return incident_timeline_to_response(incident)
 
 
-@router.get("/{incident_db_id}")
+@router.get("/{incident_db_id}", response_model=IncidentDetailResponse)
 def get_incident_detail(
     incident_db_id: UUID,
     db: Session = Depends(get_db),
