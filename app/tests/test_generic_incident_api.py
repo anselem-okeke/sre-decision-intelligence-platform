@@ -43,6 +43,9 @@ def test_generic_evaluate_matches_frontend_selector_mismatch():
     assert body["matched"] is True
     assert body["decision"]["incident_id"] == "frontend-availability-breach"
     assert body["decision"]["likely_root_cause"]["category"] == "service-routing"
+    assert body["decision"]["slo_evaluation"] is not None
+    assert body["decision"]["slo_evaluation"]["slo_id"] == "frontend-availability-30d"
+    assert body["decision"]["slo_evaluation"]["status"] == "exhausted"
 
 
 def test_generic_evaluate_returns_no_match_for_healthy_signals():

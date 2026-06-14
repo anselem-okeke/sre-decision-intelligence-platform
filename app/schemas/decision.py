@@ -4,6 +4,7 @@ from app.schemas.impact import Impact
 from app.schemas.root_cause import RootCause
 from app.schemas.safe_action import SafeAction
 from app.schemas.signal import SignalGroup
+from app.slo.models import ErrorBudgetEvaluation
 
 
 class DecisionMetadata(BaseModel):
@@ -24,3 +25,4 @@ class DecisionResponse(BaseModel):
     likely_root_cause: RootCause
     safe_action: SafeAction
     metadata: DecisionMetadata
+    slo_evaluation: ErrorBudgetEvaluation | None = None

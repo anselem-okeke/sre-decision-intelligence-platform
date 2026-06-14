@@ -7,6 +7,7 @@ from app.schemas.impact import Impact
 from app.schemas.root_cause import RootCause
 from app.schemas.safe_action import SafeAction
 from app.schemas.signal import Signal, SignalGroup
+from app.slo.decision_mapping import evaluate_slo_for_decision
 
 
 class RuleEngine:
@@ -147,6 +148,11 @@ def build_decision_response(
 ) -> DecisionResponse:
     decision = rule["decision"]
 
+    slo_evaluation = evaluate_slo_for_decision(
+        slo_affected=decision.get("slo_affected"),
+        signals=signals,
+    )
+
     return DecisionResponse(
         incident_id=rule.get("scenario_id") or rule.get("scenario"),
         service="frontend",
@@ -219,4 +225,5 @@ def build_decision_response(
             "scenario": rule.get("scenario_id") or rule.get("scenario"),
             "environment": "lab",
         },
+        slo_evaluation=slo_evaluation,
     )
