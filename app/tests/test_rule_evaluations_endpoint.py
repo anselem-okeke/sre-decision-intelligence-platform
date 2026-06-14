@@ -1,6 +1,7 @@
 from fastapi.testclient import TestClient
 
-from app.api.v1 import incidents
+# from app.api.v1 import incidents
+from app.services import frontend_incident_service
 from app.main import app
 
 client = TestClient(app)
@@ -20,9 +21,9 @@ def test_live_rule_evaluations_endpoint_returns_all_rule_results(monkeypatch):
         }
 
     monkeypatch.setattr(
-        incidents,
-        "collect_frontend_availability_live_signals",
-        fake_collect_signals,
+       frontend_incident_service,
+       "collect_frontend_availability_live_signals",
+       fake_collect_signals,
     )
 
     response = client.get(

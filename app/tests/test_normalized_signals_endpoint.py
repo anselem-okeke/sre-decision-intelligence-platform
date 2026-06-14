@@ -1,6 +1,7 @@
 from fastapi.testclient import TestClient
 
-from app.api.v1 import incidents
+# from app.api.v1 import incidents
+from app.services import frontend_incident_service
 from app.main import app
 
 client = TestClient(app)
@@ -20,10 +21,16 @@ def test_live_normalized_signals_endpoint_returns_normalized_signals(monkeypatch
         }
 
     monkeypatch.setattr(
-        incidents,
+        frontend_incident_service,
         "collect_frontend_availability_live_signals",
         fake_collect_signals,
     )
+
+    # monkeypatch.setattr(
+    #     incidents,
+    #     "collect_frontend_availability_live_signals",
+    #     fake_collect_signals,
+    # )
 
     response = client.get(
         "/api/v1/incidents/frontend-availability/live/signals/normalized"

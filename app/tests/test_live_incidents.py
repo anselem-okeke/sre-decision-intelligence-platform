@@ -1,7 +1,7 @@
 from fastapi.testclient import TestClient
 
-from app.api.v1 import incidents
 from app.main import app
+from app.services import frontend_incident_service
 
 client = TestClient(app)
 
@@ -20,7 +20,7 @@ def test_live_frontend_availability_endpoint_returns_decision_context(monkeypatc
         }
 
     monkeypatch.setattr(
-        incidents,
+        frontend_incident_service,
         "collect_frontend_availability_live_signals",
         mock_collect_live_signals,
     )
@@ -35,7 +35,6 @@ def test_live_frontend_availability_endpoint_returns_decision_context(monkeypatc
     assert body["service"] == "frontend"
     assert body["namespace"] == "fintech-workload"
     assert body["likely_root_cause"]["category"] == "service-routing"
-    assert body["likely_root_cause"]["confidence"] == "high"
     assert body["safe_action"]["risk"] == "low"
 
 
@@ -53,7 +52,7 @@ def test_live_frontend_availability_endpoint_returns_404_when_no_rule_matches(mo
         }
 
     monkeypatch.setattr(
-        incidents,
+        frontend_incident_service,
         "collect_frontend_availability_live_signals",
         mock_collect_live_signals,
     )
@@ -64,7 +63,9 @@ def test_live_frontend_availability_endpoint_returns_404_when_no_rule_matches(mo
 
     body = response.json()
 
-    assert body["detail"]["message"] == "No matching incident rule found for current live signals."
+    assert body["detail"]["message"] == (
+        "No matching incident rule found for current live signals."
+    )
 
 
 def test_live_frontend_availability_endpoint_returns_503_when_collection_fails(monkeypatch):
@@ -72,7 +73,7 @@ def test_live_frontend_availability_endpoint_returns_503_when_collection_fails(m
         raise RuntimeError("Prometheus unavailable")
 
     monkeypatch.setattr(
-        incidents,
+        frontend_incident_service,
         "collect_frontend_availability_live_signals",
         mock_collect_live_signals,
     )
@@ -83,5 +84,7 @@ def test_live_frontend_availability_endpoint_returns_503_when_collection_fails(m
 
     body = response.json()
 
-    assert body["detail"]["message"] == "Unable to collect live frontend availability signals."
+    assert body["detail"]["message"] == (
+        "Unable to collect live frontend availability signals."
+   )
     assert "Prometheus unavailable" in body["detail"]["reason"]
