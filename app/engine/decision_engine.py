@@ -120,6 +120,9 @@ def condition_matches(
     operator: str,
     expected_value: Any,
 ) -> bool:
+    if actual_value is None:
+        return False
+
     if operator == "equals":
         return actual_value == expected_value
 
@@ -127,21 +130,12 @@ def condition_matches(
         return actual_value != expected_value
 
     if operator == "contains":
-        if actual_value is None:
-            return False
-
         return str(expected_value) in str(actual_value)
 
     if operator == "greater_than":
-        if actual_value is None:
-            return False
-
         return float(actual_value) > float(expected_value)
 
     if operator == "less_than":
-        if actual_value is None:
-            return False
-
         return float(actual_value) < float(expected_value)
 
     raise ValueError(f"Unsupported operator: {operator}")

@@ -1,0 +1,23 @@
+id: longhorn-volume-degraded
+scenario_id: platform-storage-degradation
+name: Longhorn Volume Degraded
+description: Longhorn reports a degraded volume that may affect workload storage reliability.
+priority: 76
+severity: warning
+domain: platform
+
+conditions:
+  - signal: longhorn_volume_degraded
+    operator: equals
+    value: true
+
+decision:
+  impact_summary: Longhorn volume degradation detected
+  user_impact: Stateful workloads may be at risk of degraded storage performance or reduced redundancy.
+  slo_affected: platform-storage-health
+  likely_root_cause: Longhorn volume is degraded
+  confidence: medium
+  category: storage-degradation
+  safe_action: Inspect Longhorn volume replicas, node disk health, and replica rebuild status
+  safe_action_command: kubectl get volumes.longhorn.io -n longhorn-system
+  risk: medium

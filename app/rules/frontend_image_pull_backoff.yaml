@@ -1,0 +1,27 @@
+id: frontend-image-pull-backoff
+scenario_id: frontend-availability-breach
+name: Frontend ImagePullBackOff
+description: Frontend pod cannot start because Kubernetes cannot pull the container image.
+priority: 88
+severity: critical
+domain: platform
+
+conditions:
+  - signal: frontend_pod_ready
+    operator: equals
+    value: false
+
+  - signal: frontend_pod_status
+    operator: contains
+    value: ImagePullBackOff
+
+decision:
+  impact_summary: Frontend pod image pull failure
+  user_impact: Users may not be able to access the frontend because the frontend workload cannot start.
+  slo_affected: frontend-availability
+  likely_root_cause: Kubernetes cannot pull the frontend container image
+  confidence: high
+  category: image-pull-failure
+  safe_action: Check image name, tag, registry credentials, and imagePullSecrets before redeploying
+  safe_action_command: kubectl describe pod -n fintech-workload -l app=frontend
+  risk: low

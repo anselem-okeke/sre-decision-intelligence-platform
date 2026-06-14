@@ -1,0 +1,23 @@
+id: node-not-ready
+scenario_id: platform-node-health-degradation
+name: Kubernetes NodeNotReady
+description: One or more Kubernetes nodes are not ready and may affect workload availability.
+priority: 84
+severity: critical
+domain: platform
+
+conditions:
+  - signal: node_not_ready
+    operator: equals
+    value: true
+
+decision:
+  impact_summary: Kubernetes node readiness degradation detected
+  user_impact: Workloads may be unavailable, rescheduled, or degraded because a node is unhealthy.
+  slo_affected: platform-node-health
+  likely_root_cause: One or more Kubernetes nodes are NotReady
+  confidence: high
+  category: node-health
+  safe_action: Inspect affected node conditions, kubelet status, disk pressure, memory pressure, and network connectivity
+  safe_action_command: kubectl get nodes -o wide
+  risk: low

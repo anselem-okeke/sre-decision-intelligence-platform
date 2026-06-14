@@ -1,0 +1,23 @@
+id: frontend-oom-killed
+scenario_id: frontend-availability-breach
+name: Frontend OOMKilled
+description: Frontend container was killed because it exceeded its memory limit.
+priority: 82
+severity: critical
+domain: platform
+
+conditions:
+  - signal: oom_killed
+    operator: equals
+    value: true
+
+decision:
+  impact_summary: Frontend container was OOMKilled
+  user_impact: Users may experience failed or interrupted frontend requests due to container restarts.
+  slo_affected: frontend-availability
+  likely_root_cause: Frontend container exceeded its memory limit and was OOMKilled
+  confidence: high
+  category: memory-pressure
+  safe_action: Inspect memory usage, container limits, recent traffic, and memory leak indicators before increasing limits
+  safe_action_command: kubectl describe pod -n fintech-workload -l app=frontend
+  risk: medium

@@ -21,7 +21,7 @@ conditions:
 
 decision:
   impact_summary: Bank of Anthos frontend pod is crashing
-  user_impact: Users cannot reliably access the banking frontend service because the frontend workload is unhealthy.
+  user_impact: Users cannot reliably access the banking frontend because the frontend workload is unhealthy.
   slo_affected: frontend-availability
   likely_root_cause: Frontend pod is in CrashLoopBackOff
   confidence: high

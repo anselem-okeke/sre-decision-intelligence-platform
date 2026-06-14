@@ -1,0 +1,23 @@
+id: cilium-drop-spike
+scenario_id: platform-network-policy-degradation
+name: Cilium Drop Spike
+description: Network drops are elevated and may indicate policy, routing, or datapath issues.
+priority: 78
+severity: warning
+domain: platform
+
+conditions:
+  - signal: cilium_drop_count
+    operator: greater_than
+    value: 20
+
+decision:
+  impact_summary: Cilium network drops are elevated
+  user_impact: Users or services may experience failed requests due to network policy or datapath drops.
+  slo_affected: platform-network-health
+  likely_root_cause: Elevated Cilium network drops
+  confidence: medium
+  category: network-drops
+  safe_action: Inspect Hubble flows, Cilium policy verdicts, and affected source/destination services
+  safe_action_command: cilium connectivity test
+  risk: low

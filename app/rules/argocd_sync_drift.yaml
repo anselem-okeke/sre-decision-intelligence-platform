@@ -1,0 +1,23 @@
+id: argocd-sync-drift
+scenario_id: platform-gitops-drift
+name: Argo CD Sync Drift
+description: Desired Git state and live Kubernetes state are out of sync.
+priority: 74
+severity: warning
+domain: platform
+
+conditions:
+  - signal: argocd_sync_status
+    operator: not_equals
+    value: Synced
+
+decision:
+  impact_summary: Argo CD application sync drift detected
+  user_impact: The live cluster state may differ from the intended GitOps state, increasing operational risk.
+  slo_affected: platform-gitops-convergence
+  likely_root_cause: Argo CD application is out of sync
+  confidence: medium
+  category: gitops-drift
+  safe_action: Inspect Argo CD diff before syncing or rolling back
+  safe_action_command: argocd app diff <app-name>
+  risk: medium

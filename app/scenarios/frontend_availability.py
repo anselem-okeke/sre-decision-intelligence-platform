@@ -168,3 +168,122 @@ LEDGER_DATABASE_ERROR_SPIKE = ScenarioDefinition(
     risk_level="medium",
     tags=["bank-of-anthos", "ledger", "database", "workload"],
 )
+
+FRONTEND_IMAGE_PULL_BACKOFF = ScenarioDefinition(
+    id="frontend-image-pull-backoff",
+    name="Frontend ImagePullBackOff",
+    description="Detects when the frontend pod cannot start because Kubernetes cannot pull the image.",
+    domain=ScenarioDomain.PLATFORM,
+    status=ScenarioStatus.ACTIVE,
+    required_signals=["frontend_pod_status", "frontend_pod_ready"],
+    optional_signals=["image_pull_backoff"],
+    root_cause_category="image-pull-failure",
+    safe_action_summary="Check image name, tag, registry credentials, and imagePullSecrets before redeploying",
+    risk_level="low",
+    tags=["kubernetes", "image", "registry", "frontend", "platform"],
+)
+
+
+FRONTEND_FAILED_SCHEDULING = ScenarioDefinition(
+    id="frontend-failed-scheduling",
+    name="Frontend FailedScheduling",
+    description="Detects when Kubernetes cannot schedule the frontend pod onto a node.",
+    domain=ScenarioDomain.PLATFORM,
+    status=ScenarioStatus.ACTIVE,
+    required_signals=["failed_scheduling"],
+    optional_signals=["node_not_ready"],
+    root_cause_category="scheduling-failure",
+    safe_action_summary="Inspect pod events, node capacity, taints, tolerations, affinity, and resource requests",
+    risk_level="low",
+    tags=["kubernetes", "scheduler", "capacity", "platform"],
+)
+
+
+NODE_NOT_READY = ScenarioDefinition(
+    id="node-not-ready",
+    name="Kubernetes NodeNotReady",
+    description="Detects when one or more Kubernetes nodes are NotReady.",
+    domain=ScenarioDomain.PLATFORM,
+    status=ScenarioStatus.ACTIVE,
+    required_signals=["node_not_ready"],
+    optional_signals=["failed_scheduling"],
+    root_cause_category="node-health",
+    safe_action_summary="Inspect node conditions, kubelet status, disk pressure, memory pressure, and network connectivity",
+    risk_level="low",
+    tags=["kubernetes", "node", "platform", "health"],
+)
+
+
+FRONTEND_OOM_KILLED = ScenarioDefinition(
+    id="frontend-oom-killed",
+    name="Frontend OOMKilled",
+    description="Detects when the frontend container was killed after exceeding its memory limit.",
+    domain=ScenarioDomain.PLATFORM,
+    status=ScenarioStatus.ACTIVE,
+    required_signals=["oom_killed"],
+    optional_signals=["frontend_pod_status"],
+    root_cause_category="memory-pressure",
+    safe_action_summary="Inspect memory usage, limits, recent traffic, and memory leak indicators before increasing limits",
+    risk_level="medium",
+    tags=["kubernetes", "oom", "memory", "frontend", "platform"],
+)
+
+
+PVC_MOUNT_FAILURE = ScenarioDefinition(
+    id="pvc-mount-failure",
+    name="PVC Mount Failure",
+    description="Detects when Kubernetes cannot mount a persistent volume claim.",
+    domain=ScenarioDomain.PLATFORM,
+    status=ScenarioStatus.ACTIVE,
+    required_signals=["pvc_mount_failure"],
+    optional_signals=["longhorn_volume_degraded"],
+    root_cause_category="storage-mount-failure",
+    safe_action_summary="Inspect PVC, PV, storage class, Longhorn volume state, and pod mount events",
+    risk_level="medium",
+    tags=["kubernetes", "storage", "pvc", "platform"],
+)
+
+
+CILIUM_DROP_SPIKE = ScenarioDefinition(
+    id="cilium-drop-spike",
+    name="Cilium Drop Spike",
+    description="Detects elevated Cilium/Hubble network drops.",
+    domain=ScenarioDomain.PLATFORM,
+    status=ScenarioStatus.ACTIVE,
+    required_signals=["cilium_drop_count"],
+    optional_signals=[],
+    root_cause_category="network-drops",
+    safe_action_summary="Inspect Hubble flows, Cilium policy verdicts, and affected services",
+    risk_level="low",
+    tags=["cilium", "hubble", "network", "platform"],
+)
+
+
+LONGHORN_VOLUME_DEGRADED = ScenarioDefinition(
+    id="longhorn-volume-degraded",
+    name="Longhorn Volume Degraded",
+    description="Detects when Longhorn reports degraded volume health.",
+    domain=ScenarioDomain.PLATFORM,
+    status=ScenarioStatus.ACTIVE,
+    required_signals=["longhorn_volume_degraded"],
+    optional_signals=["pvc_mount_failure"],
+    root_cause_category="storage-degradation",
+    safe_action_summary="Inspect Longhorn volume replicas, node disk health, and replica rebuild status",
+    risk_level="medium",
+    tags=["longhorn", "storage", "volume", "platform"],
+)
+
+
+ARGOCD_SYNC_DRIFT = ScenarioDefinition(
+    id="argocd-sync-drift",
+    name="Argo CD Sync Drift",
+    description="Detects when desired Git state and live Kubernetes state are out of sync.",
+    domain=ScenarioDomain.PLATFORM,
+    status=ScenarioStatus.ACTIVE,
+    required_signals=["argocd_sync_status"],
+    optional_signals=[],
+    root_cause_category="gitops-drift",
+    safe_action_summary="Inspect Argo CD diff before syncing or rolling back",
+    risk_level="medium",
+    tags=["argocd", "gitops", "drift", "platform"],
+)

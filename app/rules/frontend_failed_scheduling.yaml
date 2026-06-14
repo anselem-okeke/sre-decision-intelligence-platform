@@ -1,0 +1,23 @@
+id: frontend-failed-scheduling
+scenario_id: frontend-availability-breach
+name: Frontend FailedScheduling
+description: Frontend pod cannot be scheduled onto a Kubernetes node.
+priority: 86
+severity: critical
+domain: platform
+
+conditions:
+  - signal: failed_scheduling
+    operator: equals
+    value: true
+
+decision:
+  impact_summary: Frontend pod scheduling failure
+  user_impact: Users may be affected because Kubernetes cannot place the frontend workload on a node.
+  slo_affected: frontend-availability
+  likely_root_cause: Kubernetes scheduler cannot place the frontend pod
+  confidence: high
+  category: scheduling-failure
+  safe_action: Inspect pod events, node capacity, taints, tolerations, affinity, and resource requests
+  safe_action_command: kubectl describe pod -n fintech-workload -l app=frontend
+  risk: low

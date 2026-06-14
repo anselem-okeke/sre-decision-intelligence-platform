@@ -1,0 +1,23 @@
+id: pvc-mount-failure
+scenario_id: platform-storage-degradation
+name: PVC Mount Failure
+description: A workload is degraded because Kubernetes cannot mount a persistent volume claim.
+priority: 80
+severity: critical
+domain: platform
+
+conditions:
+  - signal: pvc_mount_failure
+    operator: equals
+    value: true
+
+decision:
+  impact_summary: Kubernetes PVC mount failure detected
+  user_impact: Stateful workloads may fail to start or operate because required storage is unavailable.
+  slo_affected: platform-storage-health
+  likely_root_cause: Persistent volume claim mount failure
+  confidence: high
+  category: storage-mount-failure
+  safe_action: Inspect PVC, PV, storage class, Longhorn volume state, and pod mount events
+  safe_action_command: kubectl get pvc -A
+  risk: medium
