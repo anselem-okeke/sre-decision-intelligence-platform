@@ -1,0 +1,429 @@
+@startuml
+title Decision Intelligence API - SLI/SLO/Error Budget Activity
+
+start
+
+:Ingest observability signals;
+note right
+Prometheus / Blackbox / OpenSearch / Kubernetes
+end note
+
+:Evaluate service-level indicators;
+
+:Compute availability, latency and error rate;
+
+:Compare SLI values against SLO policy;
+
+if (SLO breached?) then (yes)
+  :Create SLO violation event;
+
+  :Calculate error budget burn;
+
+  if (Error budget exhausted?) then (yes)
+    :Classify reliability risk as HIGH;
+    :Escalate incident priority;
+    :Recommend conservative action;
+    :Prevent unsafe automated remediation;
+  else (no)
+    :Classify reliability risk as MEDIUM;
+    :Recommend investigation or controlled action;
+  endif
+
+else (no)
+  :Classify reliability risk as LOW;
+  :Continue normal decision flow;
+endif
+
+:Attach SLO context to incident decision;
+note right
+Decision output includes:
+- current SLI value
+- SLO target
+- budget remaining
+- burn rate
+- risk level
+end note
+
+:Persist result in PostgreSQL;
+
+:Expose metrics and API response;
+
+stop
+
+@enduml
+
+
+
+
+
+@startuml
+title SLI / SLO / Error Budget\nDecision Intelligence API
+
+' LinkedIn-friendly portrait style
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam dpi 160
+skinparam defaultFontName Arial
+skinparam defaultFontSize 18
+skinparam titleFontSize 26
+skinparam activity {
+  BackgroundColor #F8FAFC
+  BorderColor #334155
+  FontColor #0F172A
+  FontSize 18
+  StartColor #22C55E
+  EndColor #EF4444
+  DiamondBackgroundColor #E0F2FE
+  DiamondBorderColor #0284C7
+}
+skinparam note {
+  BackgroundColor #FEF3C7
+  BorderColor #F59E0B
+  FontSize 16
+}
+
+start
+
+:Collect reliability signals;
+
+note right
+Prometheus
+Blackbox Exporter
+Kubernetes
+OpenSearch
+end note
+
+:Measure user-facing reliability;
+
+:Compare current SLI\nagainst SLO target;
+
+if (SLO breached?) then (Yes)
+
+  :Calculate error budget burn;
+
+  if (Budget still available?) then (Yes)
+    :Service is degraded;
+    :Recommend controlled action;
+  else (No)
+    :Reliability risk is HIGH;
+    :Escalate incident;
+    :Block unsafe automation;
+  endif
+
+else (No)
+  :Service is healthy;
+  :Continue normal operation;
+endif
+
+:Attach reliability context\nto the incident decision;
+
+note right
+Decision includes:
+SLI value
+SLO target
+Budget remaining
+Risk level
+Recommended action
+end note
+
+:Expose result through\nAPI, metrics and dashboard;
+
+stop
+
+@enduml
+
+
+@startuml
+title From Reliability Signals to Safer SRE Decisions\nSLI / SLO / Error Budget Flow
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam dpi 160
+skinparam defaultFontName Arial
+skinparam defaultFontSize 20
+skinparam titleFontSize 28
+
+skinparam activity {
+  BackgroundColor #F8FAFC
+  BorderColor #334155
+  FontColor #0F172A
+  FontSize 20
+  StartColor #22C55E
+  EndColor #EF4444
+  DiamondBackgroundColor #E0F2FE
+  DiamondBorderColor #0284C7
+}
+
+start
+
+:Collect reliability signals\nPrometheus | Kubernetes | OpenSearch;
+
+:Measure user-facing reliability\nAvailability | Latency | Error Rate;
+
+:Compare SLI against SLO target;
+
+if (SLO breached?) then (Yes)
+
+  :Calculate error budget burn;
+
+  if (Budget remaining?) then (Yes)
+    :Reliability risk = MEDIUM;
+    :Recommend controlled action;
+  else (No)
+    :Reliability risk = HIGH;
+    :Escalate incident;
+    :Block unsafe automation;
+  endif
+
+else (No)
+  :Reliability risk = LOW;
+  :Continue normal operation;
+endif
+
+:Attach context to decision response\nSLI | SLO | Budget | Risk | Action;
+
+:Expose result through API,\nmetrics and dashboard;
+
+stop
+
+@enduml
+
+
+
+
+@startuml
+title From SLO Signals to Safer SRE Decisions\nDecision Intelligence API
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam dpi 160
+skinparam defaultFontName Arial
+skinparam defaultFontSize 22
+skinparam titleFontSize 30
+
+skinparam activity {
+  BackgroundColor #F8FAFC
+  BorderColor #334155
+  FontColor #0F172A
+  FontSize 22
+  StartColor #22C55E
+  EndColor #EF4444
+  DiamondBackgroundColor #E0F2FE
+  DiamondBorderColor #0284C7
+}
+
+skinparam note {
+  BackgroundColor #FEF3C7
+  BorderColor #F59E0B
+  FontSize 18
+}
+
+start
+
+:Reliability signals enter\nthe decision layer;
+
+note right
+Prometheus
+Blackbox Exporter
+Kubernetes
+OpenSearch
+end note
+
+:SLI values are evaluated\nagainst SLO targets;
+
+:Error budget burn is calculated;
+
+if (Is reliability risk acceptable?) then (Yes)
+  :Recommend controlled action;
+else (No)
+  :Escalate risk\nand block unsafe automation;
+endif
+
+:Incident decision is enriched\nwith reliability context;
+
+note right
+Output:
+- SLI status
+- SLO target
+- Budget remaining
+- Risk level
+- Recommended action
+end note
+
+:Expose decision through\nAPI, metrics and dashboard;
+
+stop
+
+@enduml
+
+
+
+
+
+
+
+
+@startuml
+title Decision Intelligence API - SLI/SLO/Error Budget Decision Flow
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 16
+skinparam titleFontSize 22
+
+skinparam activity {
+  BackgroundColor #F8FAFC
+  BorderColor #334155
+  FontColor #0F172A
+  StartColor #22C55E
+  EndColor #EF4444
+  DiamondBackgroundColor #E0F2FE
+  DiamondBorderColor #0284C7
+}
+
+skinparam note {
+  BackgroundColor #FEF3C7
+  BorderColor #F59E0B
+}
+
+start
+
+:Collect observability signals;
+
+note right
+Sources:
+- Prometheus / Blackbox
+- Kubernetes API
+- OpenSearch
+- Platform collectors
+end note
+
+:Normalize signal payload;
+
+:Evaluate incident rules;
+
+note right
+Multi-rule / multi-scenario engine
+matches workload or platform scenarios
+end note
+
+if (Incident rule matched?) then (yes)
+
+  :Build DecisionResponse;
+
+  note right
+  Decision includes:
+  - impact
+  - evidence
+  - likely root cause
+  - safe action
+  - metadata
+  end note
+
+  :Read affected SLO from decision;
+
+  note right
+  Example:
+  slo_affected = frontend-availability
+  end note
+
+  :Map affected SLO to registered SLO policy;
+
+  note right
+  SLO Registry:
+  frontend-availability
+  -> frontend-availability-30d
+  end note
+
+  if (SLO mapping found?) then (yes)
+
+    :Read current SLI value from signals;
+
+    note right
+    Example:
+    frontend_availability_5m = 0.6
+    end note
+
+    if (Valid ratio-based SLI value?) then (yes)
+
+      :Calculate error budget evaluation;
+
+      note right
+      Formula:
+      allowed failure = 1 - SLO target
+      current failure = 1 - current SLI
+      budget consumed = current failure / allowed failure
+      budget remaining = max(0, 1 - consumed)
+      end note
+
+      if (Budget consumed >= 100%?) then (yes)
+        :Set SLO status = exhausted;
+        :Classify reliability impact as high;
+      else (no)
+
+        if (Budget consumed >= critical threshold?) then (yes)
+          :Set SLO status = burning_fast;
+          :Classify reliability impact as elevated;
+        else (no)
+
+          if (Budget consumed >= warning threshold?) then (yes)
+            :Set SLO status = warning;
+            :Classify reliability impact as medium;
+          else (no)
+            :Set SLO status = healthy;
+            :Classify reliability impact as low;
+          endif
+
+        endif
+
+      endif
+
+      :Attach slo_evaluation to DecisionResponse;
+
+      note right
+      slo_evaluation includes:
+      - SLO ID
+      - SLI name
+      - target
+      - current value
+      - allowed failure
+      - budget consumed
+      - budget remaining
+      - status
+      - summary
+      end note
+
+      :Expose enriched API response;
+
+    else (no)
+
+      :Return decision without SLO evaluation;
+
+      note right
+      Reason:
+      missing or invalid SLI value
+      end note
+
+    endif
+
+  else (no)
+
+    :Return decision without SLO evaluation;
+
+    note right
+    Reason:
+    no SLO mapping for scenario
+    end note
+
+  endif
+
+else (no)
+
+  :Return no matching incident decision;
+
+endif
+
+stop
+
+@enduml
