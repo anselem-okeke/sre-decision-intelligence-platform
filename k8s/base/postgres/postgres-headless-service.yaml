@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: sre-decision-postgres
+  namespace: sre-decision-intelligence
+  labels:
+    app.kubernetes.io/name: sre-decision-postgres
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: sre-decision-intelligence-platform
+spec:
+  clusterIP: None
+  selector:
+    app.kubernetes.io/name: sre-decision-postgres
+    app.kubernetes.io/component: database
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+      protocol: TCP
