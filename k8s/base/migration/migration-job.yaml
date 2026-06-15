@@ -1,0 +1,62 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: sre-decision-db-migration
+  namespace: sre-decision-intelligence
+  labels:
+    app.kubernetes.io/name: sre-decision-db-migration
+    app.kubernetes.io/component: migration
+    app.kubernetes.io/part-of: sre-decision-intelligence-platform
+spec:
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 3600
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: sre-decision-db-migration
+        app.kubernetes.io/component: migration
+        app.kubernetes.io/part-of: sre-decision-intelligence-platform
+    spec:
+      restartPolicy: Never
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: migration
+          image: ghcr.io/anselem-okeke/sre-decision-intelligence-platform:1774090
+          imagePullPolicy: IfNotPresent
+          command:
+            - alembic
+            - upgrade
+            - head
+          env:
+            - name: ENVIRONMENT
+              value: "kubernetes"
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: sre-decision-api-secret
+                  key: DATABASE_URL
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
