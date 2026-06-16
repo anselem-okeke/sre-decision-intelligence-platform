@@ -1,0 +1,54 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: sre-decision-api-readonly
+  labels:
+    app.kubernetes.io/name: sre-decision-api
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/part-of: sre-decision-intelligence-platform
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+      - services
+      - endpoints
+      - events
+      - namespaces
+      - nodes
+      - persistentvolumes
+      - persistentvolumeclaims
+    verbs:
+      - get
+      - list
+      - watch
+
+  - apiGroups:
+      - apps
+    resources:
+      - deployments
+      - replicasets
+      - statefulsets
+      - daemonsets
+    verbs:
+      - get
+      - list
+      - watch
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: sre-decision-api-readonly
+  labels:
+    app.kubernetes.io/name: sre-decision-api
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/part-of: sre-decision-intelligence-platform
+subjects:
+  - kind: ServiceAccount
+    name: sre-decision-api
+    namespace: sre-decision-intelligence
+roleRef:
+  kind: ClusterRole
+  name: sre-decision-api-readonly
+  apiGroup: rbac.authorization.k8s.io

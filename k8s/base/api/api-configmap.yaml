@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sre-decision-api-config
+  namespace: sre-decision-intelligence
+  labels:
+    app.kubernetes.io/name: sre-decision-api
+    app.kubernetes.io/component: api
+    app.kubernetes.io/part-of: sre-decision-intelligence-platform
+data:
+  APP_NAME: "SRE Decision Intelligence Platform"
+  APP_VERSION: "0.1.0"
+  ENVIRONMENT: "kubernetes"
+
+  WORKLOAD_NAMESPACE: "fintech-workload"
+  FRONTEND_SERVICE_NAME: "frontend"
+  FRONTEND_APP_LABEL: "frontend"
+
+  PROMETHEUS_BASE_URL: "http://kps-kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090"
+  OPENSEARCH_BASE_URL: "http://opensearch-cluster-master.observability.svc.cluster.local:9200"
