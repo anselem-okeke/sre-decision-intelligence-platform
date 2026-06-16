@@ -1,0 +1,22 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: sre-decision-gateway
+  namespace: sre-decision-intelligence
+  labels:
+    app.kubernetes.io/name: sre-decision-gateway
+    app.kubernetes.io/component: gateway
+    app.kubernetes.io/part-of: sre-decision-intelligence-platform
+spec:
+  infrastructure:
+    labels:
+      lan-exposure: "enabled"
+  gatewayClassName: cilium
+  listeners:
+    - name: http
+      protocol: HTTP
+      port: 80
+      hostname: sre-decision-api.platform.local
+      allowedRoutes:
+        namespaces:
+          from: Same
