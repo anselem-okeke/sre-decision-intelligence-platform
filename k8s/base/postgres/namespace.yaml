@@ -5,3 +5,12 @@ metadata:
   labels:
     app.kubernetes.io/name: sre-decision-intelligence
     app.kubernetes.io/part-of: sre-decision-intelligence-platform
+
+    # Phase 29G Stage 1:
+    # Start with warn/audit restricted while validating all workloads.
+    # Pod Security Admission applies Pod Security Standards at namespace level 
+    # when pods are created. Kubernetes supports enforce, audit, and warn modes through namespace labels.
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/audit-version: latest
+    pod-security.kubernetes.io/warn: restricted
+    pod-security.kubernetes.io/warn-version: latest

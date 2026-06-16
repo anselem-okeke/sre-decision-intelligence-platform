@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: sre-decision-default-limits
+  namespace: sre-decision-intelligence
+  labels:
+    app.kubernetes.io/name: sre-decision-security-baseline
+    app.kubernetes.io/component: runtime-security
+    app.kubernetes.io/part-of: sre-decision-intelligence-platform
+spec:
+  limits:
+    - type: Container
+      defaultRequest:
+        cpu: 100m
+        memory: 128Mi
+      default:
+        cpu: 500m
+        memory: 512Mi
+      min:
+        cpu: 25m
+        memory: 64Mi
+      max:
+        cpu: "1"
+        memory: 1Gi
