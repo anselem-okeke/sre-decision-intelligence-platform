@@ -1,0 +1,87 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: sre-decision-api-network-policy
+  namespace: sre-decision-intelligence
+  labels:
+    app.kubernetes.io/name: sre-decision-api
+    app.kubernetes.io/component: network-policy
+    app.kubernetes.io/part-of: sre-decision-intelligence-platform
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: sre-decision-api
+      app.kubernetes.io/component: api
+
+  ingress:
+    # Allow traffic from Cilium Gateway / Envoy ingress path.
+    - fromEntities:
+        - ingress
+      toPorts:
+        - ports:
+            - port: "8000"
+              protocol: TCP
+
+    # Allow internal cluster callers if needed.
+    - fromEntities:
+        - cluster
+      toPorts:
+        - ports:
+            - port: "8000"
+              protocol: TCP
+
+    # Allow kubelet/node-originated health checks.
+    # This protects liveness/readiness probes.
+    - fromEntities:
+        - host
+        - remote-node
+      toPorts:
+        - ports:
+            - port: "8000"
+              protocol: TCP
+
+  egress:
+    # DNS
+    - toEndpoints:
+        - matchLabels:
+            io.kubernetes.pod.namespace: kube-system
+            k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+            - port: "53"
+              protocol: TCP
+
+    # Kubernetes API server for in-cluster collectors.
+    - toEntities:
+        - kube-apiserver
+
+    # PostgreSQL
+    - toEndpoints:
+        - matchLabels:
+            io.kubernetes.pod.namespace: sre-decision-intelligence
+            app.kubernetes.io/name: sre-decision-postgres
+            app.kubernetes.io/component: database
+      toPorts:
+        - ports:
+            - port: "5432"
+              protocol: TCP
+
+    # Prometheus in monitoring namespace.
+    - toEndpoints:
+        - matchLabels:
+            io.kubernetes.pod.namespace: monitoring
+      toPorts:
+        - ports:
+            - port: "9090"
+              protocol: TCP
+
+    # OpenSearch in observability namespace.
+    - toEndpoints:
+        - matchLabels:
+            io.kubernetes.pod.namespace: observability
+      toPorts:
+        - ports:
+            - port: "9200"
+              protocol: TCP

@@ -1,0 +1,39 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: sre-decision-postgres-network-policy
+  namespace: sre-decision-intelligence
+  labels:
+    app.kubernetes.io/name: sre-decision-postgres
+    app.kubernetes.io/component: network-policy
+    app.kubernetes.io/part-of: sre-decision-intelligence-platform
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: sre-decision-postgres
+      app.kubernetes.io/component: database
+
+  ingress:
+    # Only the Decision Intelligence API may connect to PostgreSQL.
+    - fromEndpoints:
+        - matchLabels:
+            io.kubernetes.pod.namespace: sre-decision-intelligence
+            app.kubernetes.io/name: sre-decision-api
+            app.kubernetes.io/component: api
+      toPorts:
+        - ports:
+            - port: "5432"
+              protocol: TCP
+
+  egress:
+    # DNS only, if required by runtime.
+    - toEndpoints:
+        - matchLabels:
+            io.kubernetes.pod.namespace: kube-system
+            k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+            - port: "53"
+              protocol: TCP
