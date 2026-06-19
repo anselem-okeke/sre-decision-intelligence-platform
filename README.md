@@ -92,7 +92,7 @@ sre-decision-intelligence-gitops
 | Testing | pytest |
 | Local runtime | Docker Compose |
 
-> ## Goal
+## Goal
 >
 > The Decision Intelligence API is an evidence-based SRE decision layer for Kubernetes incident response.
 >
