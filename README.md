@@ -92,15 +92,14 @@ sre-decision-intelligence-gitops
 | Testing | pytest |
 | Local runtime | Docker Compose |
 
-## Goal
-```text
-The Decision Intelligence API is an evidence-based SRE decision layer for Kubernetes incident response.
-
-It analyzes operational signals from workloads, services, routing, and cluster state to identify a likely root cause, assign confidence, and recommend a safe next action.
-
-The platform is not designed to blindly automate remediation.
-
-Before recommending an action, it re-validates the current evidence to avoid stale or unsafe decisions.
-
-The goal is to demonstrate how SRE teams can move from raw alerts to explainable, auditable, and safer operational decisions.
-```
+> ## Goal
+>
+> The Decision Intelligence API is an evidence-based SRE decision layer for Kubernetes incident response.
+>
+> It analyzes operational signals from workloads, services, routing, and cluster state to identify a likely root cause, assign confidence, and recommend a safe next action.
+>
+> The platform is not designed to blindly automate remediation.
+>
+> Before recommending an action, it re-validates the current evidence to avoid stale or unsafe decisions.
+>
+> The goal is to demonstrate how SRE teams can move from raw alerts to explainable, auditable, and safer operational decisions.
