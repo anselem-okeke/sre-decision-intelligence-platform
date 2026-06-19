@@ -25,6 +25,17 @@ spec:
             - port: "5432"
               protocol: TCP
 
+     # Allow the migration Job to connect to PostgreSQL.
+    - fromEndpoints:
+        - matchLabels:
+            io.kubernetes.pod.namespace: sre-decision-intelligence
+            app.kubernetes.io/name: sre-decision-db-migration
+            app.kubernetes.io/component: migration
+      toPorts:
+        - ports:
+            - port: "5432"
+              protocol: TCP
+
   egress:
     # DNS only, if required by runtime.
     - toEndpoints:
